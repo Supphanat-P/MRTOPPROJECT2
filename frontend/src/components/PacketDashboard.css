@@ -258,3 +258,16 @@ td {
     opacity: 0.35;
   }
 }
+
+.paginationControls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 8px;
+  gap: 10px;
+}
+
+.paginationControls button {
+  padding: 4px 8px;
+  cursor: pointer;
+}

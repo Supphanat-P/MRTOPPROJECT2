@@ -37,6 +37,8 @@ export default function PacketDashboard() {
   const [selectedPacket, setSelectedPacket] = useState(null);
   const [isPaused, setIsPaused] = useState(false);
   const socketRef = useRef(null);
+  const [currentPage, setCurrentPage] = useState(0);
+  const PAGE_SIZE = 12;
 
   useEffect(() => {
     socketRef.current = io("http://localhost:3000", {
@@ -99,8 +101,12 @@ export default function PacketDashboard() {
   const encPct = total ? Math.round((encCount / total) * 100) : 0;
   const isLive = !!selectedDevice;
   const last30 = filtered.slice(-30);
-  const last12 = filtered.slice(-12).reverse();
-
+  const last12 = filtered.slice().reverse();
+  const paginatedPackets = filtered.slice(
+    currentPage * PAGE_SIZE,
+    (currentPage + 1) * PAGE_SIZE,
+  );
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const lineData = {
     labels: last30.map((p) => new Date(p.timestamp).toLocaleTimeString()),
     datasets: [
@@ -302,7 +308,7 @@ export default function PacketDashboard() {
               </tr>
             </thead>
             <tbody>
-              {last12.length === 0 ? (
+              {paginatedPackets.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="emptyCell">
                     {selectedDevice
@@ -311,9 +317,9 @@ export default function PacketDashboard() {
                   </td>
                 </tr>
               ) : (
-                last12.map((p, i) => (
+                paginatedPackets.map((p, i) => (
                   <tr
-                    key={i}
+                    key={i + currentPage * PAGE_SIZE}
                     style={{ cursor: "pointer" }}
                     onClick={() =>
                       setSelectedPacket(selectedPacket === p ? null : p)
@@ -344,6 +350,26 @@ export default function PacketDashboard() {
               )}
             </tbody>
           </table>
+
+          <div className="paginationControls">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(p - 1, 0))}
+              disabled={currentPage === 0}
+            >
+              Prev
+            </button>
+            <span>
+              Page {currentPage + 1} of {totalPages || 1}
+            </span>
+            <button
+              onClick={() =>
+                setCurrentPage((p) => Math.min(p + 1, totalPages - 1))
+              }
+              disabled={currentPage >= totalPages - 1}
+            >
+              Next
+            </button>
+          </div>
         </div>
       </div>
 

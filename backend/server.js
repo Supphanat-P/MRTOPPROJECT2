@@ -20,7 +20,6 @@ let ipSet = new Set();
 let packetBuffer = [];
 let paused = false;
 
-/* ─── Device list ─── */
 app.get("/devices", (req, res) => {
   const devices = Cap.deviceList().map((d) => ({
     name: d.name,
@@ -29,7 +28,6 @@ app.get("/devices", (req, res) => {
   res.json(devices);
 });
 
-/* ─── Socket.IO ─── */
 io.on("connection", (socket) => {
   console.log("Client connected");
 
@@ -91,7 +89,8 @@ io.on("connection", (socket) => {
           const udp = decoders.UDP(buffer, ip.offset);
           srcPort = udp.info.srcport;
           dstPort = udp.info.dstport;
-          if ([53].includes(srcPort) || [53].includes(dstPort)) protocol = "DNS";
+          if ([53].includes(srcPort) || [53].includes(dstPort))
+            protocol = "DNS";
           else protocol = "UDP";
         } else if (protocolNum === 1) {
           protocol = "ICMP";
@@ -132,6 +131,10 @@ setInterval(() => {
   }
 }, 100);
 
-/* ─── Start server ─── */
+import usersRouter from "./src/routers/usersRouter.js";
+app.use("/users", usersRouter);
+
 const PORT = 3000;
-server.listen(PORT, () => console.log(`Backend running on http://localhost:${PORT}`));
+server.listen(PORT, () =>
+  console.log(`Backend running on http://localhost:${PORT}`),
+);
