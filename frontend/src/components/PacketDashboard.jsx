@@ -51,7 +51,7 @@ export default function PacketDashboard() {
       .catch(() => {});
 
     socketRef.current.on("packetBatch", (batch) =>
-      setPackets((p) => [...p, ...batch].slice(-1000)),
+      setPackets((p) => [...p, ...batch].slice()),
     );
     socketRef.current.on("ipList", setIpList);
 
@@ -143,7 +143,83 @@ export default function PacketDashboard() {
       y: { ticks: { color: "#a09f99" } },
     },
   };
+  const categoryCounts = last30.map((p) => {
+    return {
+      TCP: p.protocol === "TCP" ? 1 : 0,
+      UDP: p.protocol === "UDP" ? 1 : 0,
+      HTTPS: p.protocol === "HTTPS" ? 1 : 0,
+      Encrypted: p.encrypted ? 1 : 0,
+      Plaintext: !p.encrypted ? 1 : 0,
+    };
+  });
 
+  // Sum counts per timestamp
+  const summedCounts = categoryCounts.map((_, i) => {
+    return {
+      TCP: categoryCounts.slice(0, i + 1).reduce((a, b) => a + b.TCP, 0),
+      UDP: categoryCounts.slice(0, i + 1).reduce((a, b) => a + b.UDP, 0),
+      HTTPS: categoryCounts.slice(0, i + 1).reduce((a, b) => a + b.HTTPS, 0),
+      Encrypted: categoryCounts
+        .slice(0, i + 1)
+        .reduce((a, b) => a + b.Encrypted, 0),
+      Plaintext: categoryCounts
+        .slice(0, i + 1)
+        .reduce((a, b) => a + b.Plaintext, 0),
+    };
+  });
+  const countLineData = {
+    labels: last30.map((p) => new Date(p.timestamp).toLocaleTimeString()),
+    datasets: [
+      {
+        label: "TCP",
+        data: summedCounts.map((c) => c.TCP),
+        borderColor: "#50e3c2",
+        fill: false,
+        tension: 0.3,
+      },
+      {
+        label: "UDP",
+        data: summedCounts.map((c) => c.UDP),
+        borderColor: "#bd10e0",
+        fill: false,
+        tension: 0.3,
+      },
+      {
+        label: "HTTPS",
+        data: summedCounts.map((c) => c.HTTPS),
+        borderColor: "#d85a30",
+        fill: false,
+        tension: 0.3,
+      },
+      {
+        label: "Encrypted",
+        data: summedCounts.map((c) => c.Encrypted),
+        borderColor: "#ff9900",
+        fill: false,
+        tension: 0.3,
+      },
+      {
+        label: "Plaintext",
+        data: summedCounts.map((c) => c.Plaintext),
+        borderColor: "#1d9e75",
+        fill: false,
+        tension: 0.3,
+      },
+    ],
+  };
+  const countLineOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: false,
+    plugins: {
+      legend: { display: true, position: "bottom" },
+      tooltip: { mode: "index", intersect: false },
+    },
+    scales: {
+      x: { ticks: { color: "#a09f99" } },
+      y: { ticks: { color: "#a09f99" } },
+    },
+  };
   const protocolCounts = filtered.reduce((acc, p) => {
     acc[p.protocol] = (acc[p.protocol] || 0) + 1;
     return acc;
@@ -273,21 +349,29 @@ export default function PacketDashboard() {
       </div>
 
       <div className="chartsRow">
+
         <div className="card" style={{ height: 200 }}>
           <Line data={lineData} options={lineOptions} />
         </div>
+
         <div className="card" style={{ height: 200 }}>
           <Doughnut
             data={doughnutProtocolData}
             options={doughnutProtocolOptions}
           />
         </div>
+
+        <div className="card" style={{ height: 200 }}>
+          <Line data={countLineData} options={countLineOptions} />
+        </div>
+
         <div className="card" style={{ height: 200 }}>
           <Doughnut
             data={doughnutEncryptedData}
             options={doughnutEncryptedOptions}
           />
         </div>
+        
       </div>
 
       <div className="tableCard">
