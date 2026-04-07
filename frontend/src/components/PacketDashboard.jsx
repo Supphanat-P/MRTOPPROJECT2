@@ -38,6 +38,7 @@ export default function PacketDashboard() {
   const [isPaused, setIsPaused] = useState(false);
   const socketRef = useRef(null);
   const [currentPage, setCurrentPage] = useState(0);
+  const [getAll, setGetAll] = useState(true);
   const PAGE_SIZE = 12;
 
   useEffect(() => {
@@ -100,12 +101,12 @@ export default function PacketDashboard() {
   ]).size;
   const encPct = total ? Math.round((encCount / total) * 100) : 0;
   const isLive = !!selectedDevice;
-  const last30 = filtered.slice(-30);
+  const last30 = getAll ? filtered : filtered.slice(-30);
   const last12 = filtered.slice().reverse();
-  const paginatedPackets = filtered.slice(
-    currentPage * PAGE_SIZE,
-    (currentPage + 1) * PAGE_SIZE,
-  );
+  const paginatedPackets = filtered
+    .slice() 
+    .reverse() 
+    .slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE);
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const lineData = {
     labels: last30.map((p) => new Date(p.timestamp).toLocaleTimeString()),
@@ -153,7 +154,6 @@ export default function PacketDashboard() {
     };
   });
 
-  // Sum counts per timestamp
   const summedCounts = categoryCounts.map((_, i) => {
     return {
       TCP: categoryCounts.slice(0, i + 1).reduce((a, b) => a + b.TCP, 0),
@@ -220,6 +220,7 @@ export default function PacketDashboard() {
       y: { ticks: { color: "#a09f99" } },
     },
   };
+
   const protocolCounts = filtered.reduce((acc, p) => {
     acc[p.protocol] = (acc[p.protocol] || 0) + 1;
     return acc;
@@ -347,9 +348,20 @@ export default function PacketDashboard() {
           <div className="metricValue">{uniqueIPs}</div>
         </div>
       </div>
-
+      <div className="control-getdata">
+        <label className="switch">
+          <input
+            type="checkbox"
+            checked={!getAll}
+            onChange={() => setGetAll((prev) => !prev)}
+          />
+          <span className="slider"></span>
+        </label>
+        <span className="switchLabel">
+          {getAll ? "All packets" : "Last 30 packets"}
+        </span>
+      </div>
       <div className="chartsRow">
-
         <div className="card" style={{ height: 200 }}>
           <Line data={lineData} options={lineOptions} />
         </div>
@@ -371,7 +383,6 @@ export default function PacketDashboard() {
             options={doughnutEncryptedOptions}
           />
         </div>
-        
       </div>
 
       <div className="tableCard">

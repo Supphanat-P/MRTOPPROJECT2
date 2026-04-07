@@ -11,16 +11,16 @@ const ROLE_MAP = {
   2: { label: "Admin", className: "role-badge--admin" },
 };
 
-function getInitials(email) {
-  const name = email.split("@")[0];
+function getInitials(username) {
+  const name = username.split("@")[0];
   const parts = name.split(/[._-]/);
   if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
   return name.slice(0, 2).toUpperCase();
 }
 
-function Avatar({ email, index }) {
+function Avatar({ username, index }) {
   const color = AVATAR_COLORS[index % AVATAR_COLORS.length];
-  return <div className={`avatar avatar--${color}`}>{getInitials(email)}</div>;
+  return <div className={`avatar avatar--${color}`}>{getInitials(username)}</div>;
 }
 
 function RoleBadge({ roleId }) {
@@ -139,7 +139,7 @@ function Dashboard() {
   };
 
   const filtered = users.filter((u) =>
-    u.email.toLowerCase().includes(search.toLowerCase()),
+    u.username.toLowerCase().includes(search.toLowerCase()),
   );
 
   return (
@@ -162,7 +162,7 @@ function Dashboard() {
         <input
           className="dashboard__search"
           type="text"
-          placeholder="Search by email..."
+          placeholder="Search by username..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -202,8 +202,8 @@ function Dashboard() {
                   </td>
                   <td>
                     <div className="user-cell">
-                      <Avatar email={u.email} index={i} />
-                      <span className="user-email">{u.email}</span>
+                      <Avatar username={u.username} index={i} />
+                      <span className="user-username">{u.username}</span>
                     </div>
                   </td>
                   <td>

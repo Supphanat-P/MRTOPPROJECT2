@@ -5,11 +5,11 @@ import "./Auth.css";
 
 function Login() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
+  const [username, setusername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
+  const [token, setToken] = useState("");
   const isLogin = localStorage.getItem("token");
 
   useEffect(() => {
@@ -20,18 +20,17 @@ function Login() {
     e.preventDefault();
     setError("");
     setLoading(true);
-    try {
-      const res = await axios.post("http://localhost:3000/users/login", {
-        email,
-        password,
-      });
-      localStorage.setItem("token", res.data.token);
-      navigate("/home");
-    } catch (err) {
-      setError(err.response?.data?.message || "Invalid email or password.");
-    } finally {
-      setLoading(false);
-    }
+    axios
+      .post("http://localhost:3000/users/login", { username, password })
+      .then((res) => {
+        const token = res.data.token;
+        localStorage.setItem("token", token);
+
+        setToken(token);
+
+        navigate("/dashboard");
+      })
+      .catch((err) => console.error(err));
   };
 
   return (
@@ -44,13 +43,13 @@ function Login() {
 
         <form onSubmit={handleSubmit}>
           <div className="auth-card__field">
-            <label className="auth-card__label">Email</label>
+            <label className="auth-card__label">username</label>
             <input
               className="auth-card__input"
-              type="email"
+              type="username"
               placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={username}
+              onChange={(e) => setusername(e.target.value)}
               required
             />
           </div>

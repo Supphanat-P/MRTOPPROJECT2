@@ -5,7 +5,7 @@ import "./Auth.css";
 
 function Register() {
   const navigate = useNavigate();
-  const [email, setEmail] = useState("");
+  const [username, setusername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -22,7 +22,7 @@ function Register() {
     setLoading(true);
     try {
       await axios.post("http://localhost:3000/users/register", {
-        email,
+        username,
         password,
       });
       navigate("/login");
@@ -45,13 +45,13 @@ function Register() {
 
         <form onSubmit={handleSubmit}>
           <div className="auth-card__field">
-            <label className="auth-card__label">Email</label>
+            <label className="auth-card__label">username</label>
             <input
               className="auth-card__input"
-              type="email"
+              type="username"
               placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={username}
+              onChange={(e) => setusername(e.target.value)}
               required
             />
           </div>

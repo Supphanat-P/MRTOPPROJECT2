@@ -6,10 +6,9 @@ import { useEffect } from "react";
 
 const NAV_LINKS = [
   { to: "/home", label: "Home" },
-  { to: "/dashboard", label: "Users" },
+  { to: "/dashboard", label: "Users Managements" },
   { to: "/pdashboard", label: "Packets" },
   { to: "/History", label: "History" },
-
 ];
 
 function LogoutIcon() {
@@ -43,18 +42,21 @@ function LogoutIcon() {
   );
 }
 
-function NavBar() {
+function NavBar({ currUser, setToken }) {
   const navigate = useNavigate();
   const location = useLocation();
   const isLogin = localStorage.getItem("token");
 
   const handleLogout = () => {
     localStorage.removeItem("token");
+    setToken(null);
     navigate("/login");
   };
 
   const goToLogin = () => navigate("/login");
   const goToReg = () => navigate("/register");
+
+  console.log(currUser);
 
   return (
     <nav className="navbar">
@@ -85,10 +87,13 @@ function NavBar() {
             </button>
           </>
         ) : (
-          <button className="navbar__logout" onClick={handleLogout}>
-            <LogoutIcon />
-            Logout
-          </button>
+          <>
+            <span style={{ marginRight: 10 }}></span>
+            <button className="navbar__logout" onClick={handleLogout}>
+              <LogoutIcon />
+              Logout
+            </button>
+          </>
         )}
       </div>
     </nav>

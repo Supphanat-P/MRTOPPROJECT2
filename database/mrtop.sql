@@ -48,7 +48,7 @@ INSERT INTO `roles` (`role_id`, `role_name`) VALUES
 
 CREATE TABLE `users` (
   `user_id` int NOT NULL,
-  `email` text NOT NULL,
+  `username` text NOT NULL,
   `password` text NOT NULL,
   `role_id` int NOT NULL DEFAULT '1',
   `ip` text NOT NULL
@@ -58,7 +58,7 @@ CREATE TABLE `users` (
 -- Dumping data for table `users`
 --
 
-INSERT INTO `users` (`user_id`, `email`, `password`, `role_id`, `ip`) VALUES
+INSERT INTO `users` (`user_id`, `username`, `password`, `role_id`, `ip`) VALUES
 (9, 'test123@gmail.com', '$2b$10$P9eBZPp7MUqBR/nX9TRqw.h8OzWp9GzFqZUOp.eA7Yx9lLbp65emi', 2, ''),
 (10, 'admin@gmail.com', '$2b$10$O2FLWMZqbKK0ip9jamY56eEdvfQYb5.NM4kWgQF9vXIvodFHN87HO', 2, ''),
 (11, 'healthq@example.com', '$2b$10$UV7tFhrwCmhIBz5nu2jhFuSQgNYi02mXo5YSjjuzb5qSiaQPfFUfO', 2, '::ffff:127.0.0.1');

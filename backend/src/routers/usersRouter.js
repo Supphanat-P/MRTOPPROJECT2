@@ -9,7 +9,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 import {
   createUser,
   getRoleNamebyUserId,
-  getUserByEmail,
+  getUserByusername,
   getAllUsers,
   deleteUser,
 } from "../controllers/usersControllers.js";
@@ -21,12 +21,12 @@ usersRouter.get("/check", async (req, res) => {
 });
 
 usersRouter.post("/register", async (req, res) => {
-  const { email, password } = req.body;
-  if (!email || !password)
+  const { username, password } = req.body;
+  if (!username || !password)
     return res.status(400).json({ message: "Missing required fields" });
 
   try {
-    const result = await createUser({ email, password });
+    const result = await createUser({ username, password });
 
     return res.status(200).json({ message: "Success", ip: clientIp });
   } catch (error) {
@@ -35,16 +35,22 @@ usersRouter.post("/register", async (req, res) => {
 });
 
 usersRouter.post("/login", async (req, res) => {
-  const { email, password } = req.body;
-  const user = await getUserByEmail(email);
-  if (!user) return res.status(404).json({ message: "User not found" });
+  const { username, password } = req.body;
 
+  const user = await getUserByusername(username);
+  if (!user) return res.status(404).json({ message: "User not found" });
   const valid = await bcrypt.compare(password, user.password);
   if (!valid) return res.status(403).json({ message: "Unauthorized" });
 
-  const token = jwt.sign({ id: user.user_id }, JWT_SECRET, { expiresIn: "1h" });
+  const role = await getRoleNamebyUserId(user.user_id);
 
-  return res.status(200).json({ message: "Success", token, ip: clientIp });
+  const token = jwt.sign(
+    { id: user.user_id, role: role, username: user.username },
+    JWT_SECRET,
+    { expiresIn: "1h" },
+  );
+
+  return res.status(200).json({ message: "Success", token });
 });
 
 // --- JWT Middleware ---
@@ -63,6 +69,8 @@ const jwtMiddleware = (req, res, next) => {
     } else {
       req.jwtexpired = false;
       req.user_id = payload.id;
+      req.role = payload.role;
+      req.username = payload.username;
     }
     next();
   });
@@ -72,18 +80,21 @@ usersRouter.get("/verify", jwtMiddleware, async (req, res) => {
   if (req.jwtexpired) return res.status(403).json({ message: "Unauthorized" });
   try {
     const role = await getRoleNamebyUserId(req.user_id);
-    res.status(200).json({ message: "Success", role: role || "Unknown Role" });
+    const username = req.username;
+    res
+      .status(200)
+      .json({ message: "Success", role: role, username: username });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Failed to fetch role" });
   }
 });
 
-usersRouter.get("/getEmailById/:id", async (req, res) => {
+usersRouter.get("/getusernameById/:id", async (req, res) => {
   const userId = req.params.id;
   try {
-    const email = await getEmailById(userId);
-    res.json(email);
+    const username = await getusernameById(userId);
+    res.json(username);
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
