@@ -4,21 +4,24 @@ import { Server } from "socket.io";
 import pkg from "cap";
 const { Cap, decoders } = pkg;
 import cors from "cors";
+import jwt from "jsonwebtoken";
+import { savePackets } from "./src/controllers/packetsController.js";
+import packetsRouter from "./src/routers/packetsRouter.js";
+import usersRouter from "./src/routers/usersRouter.js";
 
 const app = express();
+
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ limit: "10mb", extended: true }));
+
+app.use("/packets", packetsRouter);
+app.use("/users", usersRouter);
 
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
 
 const PROTOCOL = decoders.PROTOCOL;
-
-let c;
-let linkType;
-let ipSet = new Set();
-let packetBuffer = [];
-let paused = false;
 
 app.get("/devices", (req, res) => {
   const devices = Cap.deviceList().map((d) => ({
@@ -29,72 +32,88 @@ app.get("/devices", (req, res) => {
 });
 
 io.on("connection", (socket) => {
-  console.log("Client connected");
+  console.log("Client connected:", socket.id);
+  console.log("Client Count:", io.sockets.sockets.size);
+  let c;
+  let linkType;
+  let ipSet = new Set();
+  let packetBuffer = [];
+  let paused = false;
+  let currentUserId = null;
 
-  socket.on("startCapture", (deviceName) => {
-    console.log("Starting capture on:", deviceName);
+  const token = socket.handshake.auth?.token;
+
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      currentUserId = decoded.id;
+      console.log("User ID:", currentUserId);
+    } catch (err) {
+      console.log("Invalid token");
+    }
+  }
+
+  socket.on("startCapture", ({ deviceName }) => {
+    console.log("Start:", deviceName, "User:", currentUserId);
+
+    if (!currentUserId) {
+      console.log("No user → skip capture");
+      return;
+    }
+
     if (c) c.close();
     paused = false;
 
-    const filter = "ip";
-    const bufSize = 10 * 1024 * 1024;
     const buffer = Buffer.alloc(65535);
-
     c = new Cap();
+
     try {
-      linkType = c.open(deviceName, filter, bufSize, buffer);
+      linkType = c.open(deviceName, "ip", 10 * 1024 * 1024, buffer);
     } catch (err) {
-      console.error("Failed to open device:", err.message);
+      console.error("Open error:", err.message);
       return;
     }
 
     ipSet = new Set();
     packetBuffer = [];
 
-    c.on("packet", (nbytes, trunc) => {
+    c.on("packet", () => {
       if (linkType !== "ETHERNET") return;
 
       const ret = decoders.Ethernet(buffer);
+
       if (ret.info.type === PROTOCOL.ETHERNET.IPV4) {
         const ip = decoders.IPV4(buffer, ret.offset);
+
         const src = ip.info.srcaddr;
         const dst = ip.info.dstaddr;
-        const protocolNum = ip.info.protocol;
-
-        ipSet.add(src);
-        ipSet.add(dst);
 
         let protocol = "OTHER";
         let encrypted = false;
-        let srcPort, dstPort, flags;
+        let srcPort, dstPort;
 
-        if (protocolNum === 6) {
+        if (ip.info.protocol === 6) {
           const tcp = decoders.TCP(buffer, ip.offset);
           srcPort = tcp.info.srcport;
           dstPort = tcp.info.dstport;
-          flags = tcp.info.flags;
 
-          if ([443].includes(srcPort) || [443].includes(dstPort)) {
+          if (srcPort === 443 || dstPort === 443) {
             protocol = "HTTPS";
             encrypted = true;
-          } else if ([80].includes(srcPort) || [80].includes(dstPort)) {
+          } else if (srcPort === 80 || dstPort === 80) {
             protocol = "HTTP";
-          } else if ([22].includes(srcPort) || [22].includes(dstPort)) {
-            protocol = "SSH";
-            encrypted = true;
           } else {
             protocol = "TCP";
           }
-        } else if (protocolNum === 17) {
+        } else if (ip.info.protocol === 17) {
           const udp = decoders.UDP(buffer, ip.offset);
           srcPort = udp.info.srcport;
           dstPort = udp.info.dstport;
-          if ([53].includes(srcPort) || [53].includes(dstPort))
-            protocol = "DNS";
-          else protocol = "UDP";
-        } else if (protocolNum === 1) {
-          protocol = "ICMP";
+          protocol = "UDP";
         }
+
+        ipSet.add(src);
+        ipSet.add(dst);
 
         packetBuffer.push({
           src,
@@ -105,34 +124,39 @@ io.on("connection", (socket) => {
           timestamp: Date.now(),
           srcPort,
           dstPort,
-          flags,
         });
       }
     });
   });
 
-  socket.on("pauseCapture", () => {
-    paused = true;
-    console.log("Capture paused");
-  });
-  socket.on("resumeCapture", () => {
-    paused = false;
-    console.log("Capture resumed");
-  });
+  socket.on("pauseCapture", () => (paused = true));
+  socket.on("resumeCapture", () => (paused = false));
 
-  socket.on("disconnect", () => console.log("Client disconnected"));
+  const interval = setInterval(async () => {
+    if (!paused && packetBuffer.length > 0) {
+      const batch = packetBuffer;
+
+      socket.emit("packetBatch", batch);
+      socket.emit("ipList", Array.from(ipSet));
+
+      if (currentUserId) {
+        try {
+          await savePackets(batch, currentUserId);
+        } catch (err) {
+          console.error("DB Save error:", err);
+        }
+      }
+
+      packetBuffer = [];
+    }
+  }, 100);
+
+  socket.on("disconnect", () => {
+    console.log("Disconnected:", socket.id);
+    clearInterval(interval);
+    if (c) c.close();
+  });
 });
-
-setInterval(() => {
-  if (!paused && packetBuffer.length > 0) {
-    io.emit("packetBatch", packetBuffer);
-    io.emit("ipList", Array.from(ipSet));
-    packetBuffer = [];
-  }
-}, 100);
-
-import usersRouter from "./src/routers/usersRouter.js";
-app.use("/users", usersRouter);
 
 const PORT = 3000;
 server.listen(PORT, () =>

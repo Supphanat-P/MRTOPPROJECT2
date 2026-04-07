@@ -28,7 +28,7 @@ usersRouter.post("/register", async (req, res) => {
   try {
     const result = await createUser({ username, password });
 
-    return res.status(200).json({ message: "Success", ip: clientIp });
+    return res.status(200).json({ message: "Success" });
   } catch (error) {
     return res.status(500).json({ message: error.message, code: error.code });
   }
@@ -79,11 +79,15 @@ const jwtMiddleware = (req, res, next) => {
 usersRouter.get("/verify", jwtMiddleware, async (req, res) => {
   if (req.jwtexpired) return res.status(403).json({ message: "Unauthorized" });
   try {
+    const user_id = req.user_id;
     const role = await getRoleNamebyUserId(req.user_id);
     const username = req.username;
-    res
-      .status(200)
-      .json({ message: "Success", role: role, username: username });
+    res.status(200).json({
+      message: "Success",
+      role: role,
+      username: username,
+      user_id: user_id,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Failed to fetch role" });

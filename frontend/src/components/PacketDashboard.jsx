@@ -14,6 +14,7 @@ import {
   Filler,
 } from "chart.js";
 import "./PacketDashboard.css";
+import axios from "axios";
 
 ChartJS.register(
   CategoryScale,
@@ -38,25 +39,32 @@ export default function PacketDashboard() {
   const [isPaused, setIsPaused] = useState(false);
   const socketRef = useRef(null);
   const [currentPage, setCurrentPage] = useState(0);
-  const [getAll, setGetAll] = useState(true);
+  const [getAll, setGetAll] = useState(false);
   const PAGE_SIZE = 12;
 
   useEffect(() => {
-    socketRef.current = io("http://localhost:3000", {
-      transports: ["websocket", "polling"],
-    });
+    const init = async () => {
+      socketRef.current = io("http://localhost:3000", {
+        transports: ["websocket", "polling"],
+        auth: {
+          token: localStorage.getItem("token"),
+        },
+      });
 
-    fetch("http://localhost:3000/devices")
-      .then((r) => r.json())
-      .then(setDevices)
-      .catch(() => {});
+      fetch("http://localhost:3000/devices")
+        .then((r) => r.json())
+        .then(setDevices)
+        .catch(() => {});
 
-    socketRef.current.on("packetBatch", (batch) =>
-      setPackets((p) => [...p, ...batch].slice()),
-    );
-    socketRef.current.on("ipList", setIpList);
+      socketRef.current.on("packetBatch", (batch) =>
+        setPackets((p) => [...p, ...batch]),
+      );
+      socketRef.current.on("ipList", setIpList);
+    };
 
-    return () => socketRef.current.disconnect();
+    init();
+
+    return () => socketRef.current?.disconnect();
   }, []);
 
   useEffect(() => setDisplayPackets([...packets]), [packets]);
@@ -65,7 +73,11 @@ export default function PacketDashboard() {
     setPackets([]);
     setDisplayPackets([]);
     setFilterIP("");
-    socketRef.current.emit("startCapture", deviceName);
+
+    socketRef.current.emit("startCapture", {
+      deviceName,
+    });
+
     setIsPaused(false);
   }, []);
 
@@ -104,8 +116,8 @@ export default function PacketDashboard() {
   const last30 = getAll ? filtered : filtered.slice(-30);
   const last12 = filtered.slice().reverse();
   const paginatedPackets = filtered
-    .slice() 
-    .reverse() 
+    .slice()
+    .reverse()
     .slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE);
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const lineData = {
@@ -387,7 +399,6 @@ export default function PacketDashboard() {
 
       <div className="tableCard">
         <div className="tableHeader">
-          <span>Latest packets</span>
           <span>{total} packets</span>
         </div>
         <div style={{ overflowX: "auto" }}>
