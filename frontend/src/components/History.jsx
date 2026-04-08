@@ -6,25 +6,75 @@ function History() {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [currentPage, setCurrentPage] = useState(0);
+  const PAGE_SIZE = 12;
 
-  useEffect(() => {
-    const fetchHistory = async () => {
-      try {
-        const res = await axios.get("http://localhost:3000/user-role/history");
-        setHistory(res.data);
-      } catch (err) {
-        console.error("Failed to fetch history:", err);
-        setError("Failed to fetch history or you are not authorized.");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchHistory();
-  }, []);
+ useEffect(() => {
+  const fetchHistory = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await axios.get("http://localhost:3000/user-role/history", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      setHistory(res.data);
+    } catch (err) {
+      console.error("Failed to fetch history:", err);
+      setError("Failed to fetch history or you are not authorized.");
+    } finally {
+      setLoading(false);
+    }
+  };
+  fetchHistory();
+}, []);
+
+const handleClearHistory = async () => {
+  if (window.confirm("Are you sure you want to clear your packet history?")) {
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete("http://localhost:3000/user-role/history", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setHistory([]);
+      setCurrentPage(0);
+    } catch (err) {
+      console.error("Failed to clear history:", err);
+      alert("Failed to clear history.");
+    }
+  }
+};
+
+const paginatedPackets = history
+    .slice()
+    .reverse()
+    .slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE);
+  const totalPages = Math.ceil(history.length / PAGE_SIZE);
 
   return (
     <div className="History" style={{ padding: "20px" }}>
-      <h1>Your Packet History</h1>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <h1>Your Packet History</h1>
+        <button 
+          onClick={handleClearHistory} 
+          style={{ 
+            padding: "10px 20px", 
+            backgroundColor: "#ff4d4f", 
+            color: "white", 
+            border: "none", 
+            borderRadius: "6px", 
+            cursor: "pointer",
+            fontWeight: "bold"
+          }}
+          disabled={history.length === 0}
+        >
+          Clear History
+        </button>
+      </div>
       {loading ? (
         <p>Loading history...</p>
       ) : error ? (
@@ -41,22 +91,53 @@ function History() {
               <th>Protocol</th>
               <th>Length</th>
               <th>Encrypted</th>
+              <th>Payload</th>
             </tr>
           </thead>
           <tbody>
-            {history.map((packet, idx) => (
+            {paginatedPackets.map((packet, idx) => (
               <tr key={packet.id || idx}>
                 <td>{new Date(packet.timestamp).toLocaleString()}</td>
                 <td>{packet.src}</td>
                 <td>{packet.dst}</td>
-                <td>{packet.protocol}</td>
+                 <td>
+                      <span
+                        style={{
+                          padding: "2px 8px",
+                          borderRadius: 20,
+                          background: "#e1f5ee",
+                          color: "#0f6e56",
+                          border: "1px solid #9fe1cb",
+                        }}
+                      >
+                        {packet.protocol}
+                      </span>
+                    </td>
                 <td>{packet.length}</td>
                 <td>{packet.encrypted ? "Yes" : "No"}</td>
+                <td>{packet.payload}</td>
               </tr>
             ))}
           </tbody>
         </table>
       )}
+       <div className="paginationControls">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(p - 1, 0))}
+              disabled={currentPage === 0}
+            >
+              Prev
+            </button>
+            <span>Page {currentPage + 1} of {totalPages || 1}</span>
+            <button
+              onClick={() =>
+                setCurrentPage((p) => Math.min(p + 1, totalPages - 1))
+              }
+              disabled={currentPage >= totalPages - 1}
+            >
+              Next
+            </button>
+          </div>
     </div>
   );
 }

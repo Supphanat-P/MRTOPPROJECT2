@@ -12,7 +12,7 @@ const config = {
 };
 
 const pool = mysql.createPool({
-  config,
+  ...config,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
@@ -42,6 +42,16 @@ userRoleRouter.get("/history", jwtMiddleware, async (req, res) => {
   } catch (err) {
     console.error("DB Error:", err);
     res.status(500).json({ message: "Failed to get history" });
+  }
+});
+
+userRoleRouter.delete("/history", jwtMiddleware, async (req, res) => {
+  try {
+    await pool.query("DELETE FROM packets WHERE user_id = ?", [req.user_id]);
+    res.json({ message: "History cleared successfully" });
+  } catch (err) {
+    console.error("DB Error:", err);
+    res.status(500).json({ message: "Failed to clear history" });
   }
 });
 

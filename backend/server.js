@@ -8,7 +8,7 @@ import jwt from "jsonwebtoken";
 import { savePackets } from "./src/controllers/packetsController.js";
 import packetsRouter from "./src/routers/packetsRouter.js";
 import usersRouter from "./src/routers/usersRouter.js";
-import userRoleRouter from "./src/role/user.js";
+import userRoleRouter from "./src/role/userRoleRouter.js";
 
 const app = express();
 

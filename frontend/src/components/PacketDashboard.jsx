@@ -112,6 +112,7 @@ export default function PacketDashboard() {
   const encPct = total ? Math.round((encCount / total) * 100) : 0;
   const isLive = !!selectedDevice;
   const last30 = getAll ? filtered : filtered.slice(-30);
+  
   const paginatedPackets = filtered
     .slice()
     .reverse()
