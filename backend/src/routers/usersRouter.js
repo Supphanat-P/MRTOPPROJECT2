@@ -149,18 +149,23 @@ usersRouter.put("/update-role/:id", jwtMiddleware, async (req, res) => {
     }
 
     const userId = Number(req.params.id);
-    const { role_id } = req.body; // เปลี่ยนตรงนี้
+    const { role_id } = req.body;
 
-    // 🔎 เช็คค่า
     if (isNaN(userId)) {
       return res.status(400).json({ message: "Invalid user ID" });
     }
 
-    if (![1, 2].includes(role_id)) { // เช็คเป็นเลข
+    if (![1, 2].includes(role_id)) {
       return res.status(400).json({ message: "Invalid role_id" });
     }
 
-    // update ด้วย role_id
+    // ห้ามแก้ role ตัวเอง
+    if (req.user_id === userId) {
+      return res.status(400).json({
+        message: "You cannot change your own role"
+      });
+    }
+
     await updateUserRole(userId, role_id);
 
     res.json({ message: "Role updated successfully" });
