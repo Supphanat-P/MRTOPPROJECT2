@@ -8,6 +8,7 @@ import jwt from "jsonwebtoken";
 import { savePackets } from "./src/controllers/packetsController.js";
 import packetsRouter from "./src/routers/packetsRouter.js";
 import usersRouter from "./src/routers/usersRouter.js";
+import userRoleRouter from "./src/role/user.js";
 
 const app = express();
 
@@ -17,6 +18,7 @@ app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
 app.use("/packets", packetsRouter);
 app.use("/users", usersRouter);
+app.use("/user-role", userRoleRouter);
 
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });

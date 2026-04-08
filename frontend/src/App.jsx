@@ -4,6 +4,7 @@ import Register from "./components/Register";
 import Home from "./components/Home";
 import Dashboard from "./components/Dashboard";
 import PacketDashboard from "./components/PacketDashboard";
+import History from "./components/History";
 import NavBar from "./components/Navbar";
 import "./App.css";
 import { useEffect, useState } from "react";
@@ -46,6 +47,7 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/pdashboard" element={<PacketDashboard />} />
+        <Route path="/history" element={<History />} />
       </Routes>
     </BrowserRouter>
   );
