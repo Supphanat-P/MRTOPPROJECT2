@@ -43,14 +43,14 @@ export default function PacketDashboard() {
 
   useEffect(() => {
     const init = async () => {
-      socketRef.current = io("http://localhost:3000", {
+      socketRef.current = io("/", {
         transports: ["websocket", "polling"],
         auth: {
           token: localStorage.getItem("token"),
         },
       });
 
-      fetch("http://localhost:3000/devices")
+      fetch("/api/devices")
         .then((r) => r.json())
         .then(setDevices)
         .catch(() => {});
@@ -111,17 +111,16 @@ export default function PacketDashboard() {
   ]).size;
   const encPct = total ? Math.round((encCount / total) * 100) : 0;
   const isLive = !!selectedDevice;
-  
+
   const last30 = getAll ? filtered : filtered.slice(-30);
 
   const paginatedPackets = filtered
     .slice()
     .reverse()
     .slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE);
-  
-    const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
 
-  // helper: แปลง payload เป็น printable ASCII
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+
   const sanitizePayload = (raw, maxLen = 80) => {
     if (!raw) return null;
     return raw.replace(/[^\x20-\x7E]/g, ".").slice(0, maxLen);
@@ -268,14 +267,13 @@ export default function PacketDashboard() {
     ],
   };
 
-  const doughnutEncryptedOptions = {
+  const doughnutProtocolOptions = {
     responsive: true,
     maintainAspectRatio: false,
     cutout: "72%",
     plugins: { legend: { display: true, position: "right" } },
   };
-
-  const doughnutProtocolOptions = {
+  const doughnutEncryptedOptions = {
     responsive: true,
     maintainAspectRatio: false,
     cutout: "72%",
@@ -386,24 +384,25 @@ export default function PacketDashboard() {
       </div>
 
       <div className="chartsRow">
-
         <div className="card" style={{ height: 200 }}>
           <Line data={lineData} options={lineOptions} />
         </div>
-        
-        <div className="card" style={{ height: 200 }}>
-          <Doughnut
-            data={doughnutProtocolData}
-            options={doughnutProtocolOptions}
-          />
-        </div>
-        <div className="card" style={{ height: 200 }}>
-          <Line data={countLineData} options={countLineOptions} />
-        </div>
+
         <div className="card" style={{ height: 200 }}>
           <Doughnut
             data={doughnutEncryptedData}
             options={doughnutEncryptedOptions}
+          />
+        </div>
+
+        <div className="card" style={{ height: 200 }}>
+          <Line data={countLineData} options={countLineOptions} />
+        </div>
+
+        <div className="card" style={{ height: 200 }}>
+          <Doughnut
+            data={doughnutProtocolData}
+            options={doughnutProtocolOptions}
           />
         </div>
       </div>

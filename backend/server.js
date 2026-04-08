@@ -15,15 +15,15 @@ app.use(cors());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
-app.use("/packets", packetsRouter);
-app.use("/users", usersRouter);
+app.use("/api/packets", packetsRouter);
+app.use("/api/users", usersRouter);
 
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
 
 const PROTOCOL = decoders.PROTOCOL;
 
-app.get("/devices", (req, res) => {
+app.get("/api/devices", (req, res) => {
   const devices = Cap.deviceList().map((d) => ({
     name: d.name,
     desc: d.description,
@@ -80,15 +80,13 @@ io.on("connection", (socket) => {
 
     c.on("packet", () => {
       if (linkType !== "ETHERNET") return;
-
       const ret = decoders.Ethernet(buffer);
 
       if (ret.info.type === PROTOCOL.ETHERNET.IPV4) {
         const ip = decoders.IPV4(buffer, ret.offset);
 
-        const src = ip.info.srcaddr;
-        const dst = ip.info.dstaddr;
-
+        let src = ip.info.srcaddr;
+        let dst = ip.info.dstaddr;
         let protocol = "OTHER";
         let encrypted = false;
         let srcPort, dstPort;
@@ -97,15 +95,11 @@ io.on("connection", (socket) => {
           const tcp = decoders.TCP(buffer, ip.offset);
           srcPort = tcp.info.srcport;
           dstPort = tcp.info.dstport;
-
           if (srcPort === 443 || dstPort === 443) {
             protocol = "HTTPS";
             encrypted = true;
-          } else if (srcPort === 80 || dstPort === 80) {
-            protocol = "HTTP";
-          } else {
-            protocol = "TCP";
-          }
+          } else if (srcPort === 80 || dstPort === 80) protocol = "HTTP";
+          else protocol = "TCP";
         } else if (ip.info.protocol === 17) {
           const udp = decoders.UDP(buffer, ip.offset);
           srcPort = udp.info.srcport;
@@ -113,59 +107,22 @@ io.on("connection", (socket) => {
           protocol = "UDP";
         }
 
-        ipSet.add(src);
-        ipSet.add(dst);
-
-        let payload = null;
-        let method = null;
-
-        try {
-          let dataOffset = null;
-
-          switch (ip.info.protocol) {
-            case 6: // TCP
-              const tcp = decoders.TCP(buffer, ip.offset);
-              dataOffset = tcp.offset;
-              break;
-
-            case 17: // UDP
-              const udp = decoders.UDP(buffer, ip.offset);
-              dataOffset = udp.offset;
-              break;
-
-            case 1: // ICMP
-              const icmp = decoders.ICMP(buffer, ip.offset);
-              dataOffset = icmp.offset;
-              break;
-
-            default:
-              dataOffset = ip.offset;
-              break;
-          }
-
-          if (dataOffset !== null && dataOffset < buffer.length) {
-            payload = buffer.slice(dataOffset);
-            const text = payload.toString("utf8");
-            if (/^[A-Z]+ /.test(text)) {
-              method = text.split(" ")[0];
-            }
-          }
-        } catch (err) {
-          payload = null;
+        if (!paused) {
+          // ✅ แก้ตรงนี้
+          packetBuffer.push({
+            src,
+            dst,
+            protocol,
+            length: ip.info.totallen,
+            encrypted,
+            timestamp: Date.now(),
+            srcPort,
+            dstPort,
+            payload: buffer.slice(ip.offset).toString("hex").slice(0, 200),
+          });
+          ipSet.add(src);
+          ipSet.add(dst);
         }
-
-        packetBuffer.push({
-          src,
-          dst,
-          protocol,
-          length: ip.info.totallen,
-          encrypted,
-          timestamp: Date.now(),
-          srcPort,
-          dstPort,
-          payload: payload ? payload.toString("hex") : null,
-          method,
-        });
       }
     });
   });
