@@ -8,6 +8,7 @@ import jwt from "jsonwebtoken";
 import { savePackets } from "./src/controllers/packetsController.js";
 import packetsRouter from "./src/routers/packetsRouter.js";
 import usersRouter from "./src/routers/usersRouter.js";
+import adminRoleRouter from "./src/routers/adminRoleRouter.js"; // Jo: นำเข้า adminRoleRouter สำหรับ API ของ Admin
 
 const app = express();
 
@@ -17,6 +18,7 @@ app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
 app.use("/packets", packetsRouter);
 app.use("/users", usersRouter);
+app.use("/admin", adminRoleRouter); // Jo: เพิ่ม Route Prefix /admin สำหรับจัดการข้อมูลส่วนของ Admin
 
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
