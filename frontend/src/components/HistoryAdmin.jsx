@@ -18,8 +18,8 @@ function HistoryAdmin() {
     const fetchData = async () => {
       try {
         const [packetsRes, usersRes] = await Promise.all([
-          axios.get("http://localhost:3000/admin/packets"),
-          axios.get("http://localhost:3000/admin/users")
+          axios.get("/api/admin/packets"),
+          axios.get("/api/admin/users")
         ]);
         setPackets(packetsRes.data);
         setUsers(usersRes.data);
