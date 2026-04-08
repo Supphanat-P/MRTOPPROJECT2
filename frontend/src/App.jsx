@@ -8,14 +8,42 @@ import History from "./components/History";
 import HistoryAdmin from "./components/HistoryAdmin"; // Jo: นำเข้า HistoryAdmin component สำหรับ Admin
 import NavBar from "./components/Navbar";
 import "./App.css";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import axios from "axios";
+import io from "socket.io-client";
 
 function App() {
   const [currUser, setCurrUser] = useState({ username: "", role: "" });
-  const [token, setToken] = useState(localStorage.getItem("token")); // <-- init here
+  const [token, setToken] = useState(localStorage.getItem("token"));
+  const [alertMsg, setAlertMsg] = useState(null);
 
-  // Whenever token changes, fetch user info
+  const socketRef = useRef(null);
+
+  //  สร้าง socket แค่ครั้งเดียว
+  useEffect(() => {
+    if (!token) return;
+
+    socketRef.current = io("http://localhost:3000", {
+      auth: { token },
+    });
+
+    // ฟัง alert
+    socketRef.current.on("securityAlert", (data) => {
+      console.log("🔥 ALERT:", data);
+
+      setAlertMsg(`${data.message} (${data.total || data.rate})`);
+
+      setTimeout(() => {
+        setAlertMsg(null);
+      }, 3000);
+    });
+
+    return () => {
+      socketRef.current.disconnect();
+    };
+  }, [token]);
+
+  //  verify user
   useEffect(() => {
     if (token) {
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
@@ -42,6 +70,14 @@ function App() {
   return (
     <BrowserRouter>
       <NavBar currUser={currUser} token={token} setToken={setToken} />
+
+      {/* alert โผล่ทุกหน้า */}
+      {alertMsg && (
+        <div className="alert-box">
+          ⚠️ {alertMsg}
+        </div>
+      )}
+
       <Routes>
         <Route path="/home" element={<Home />} />
         <Route path="/login" element={<Login setToken={setToken} />} />
@@ -50,6 +86,12 @@ function App() {
         <Route path="/pdashboard" element={<PacketDashboard />} />
         <Route path="/history" element={<History />} />
         <Route path="/historyadmin" element={<HistoryAdmin />} /> {/* Jo: เพิ่ม Route สำหรับหน้า HistoryAdmin */}
+
+        {/* ส่ง socket ลงไป */}
+        <Route
+          path="/pdashboard"
+          element={<PacketDashboard socket={socketRef.current} />}
+        />
       </Routes>
     </BrowserRouter>
   );

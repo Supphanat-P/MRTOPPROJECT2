@@ -137,7 +137,26 @@ function Dashboard() {
       alert(err.response?.data?.message || "Failed to delete user");
     }
   };
+  const handleChangeRole = async (id, currentRoleId) => {
+    // 🔥 สลับ 1 ↔ 2
+    const newRoleId = currentRoleId === 2 ? 1 : 2;
 
+    try {
+      await axios.put(
+        `http://localhost:3000/users/update-role/${id}`,
+        { role_id: newRoleId },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      alert("เปลี่ยน role สำเร็จ");
+      fetchUsers();
+    } catch (err) {
+      console.error(err.response?.data || err);
+      alert(err.response?.data?.message || "เปลี่ยน role ไม่สำเร็จ");
+    }
+  };
   const filtered = users.filter((u) =>
     u.username.toLowerCase().includes(search.toLowerCase()),
   );
@@ -215,6 +234,13 @@ function Dashboard() {
                       onClick={() => handleDelete(u.id)}
                     >
                       Delete
+                    </button>
+                    <button
+                      className={`btn-ChangeRole ${u.role_id === 1 ? "user" : "admin"
+                        }`}
+                      onClick={() => handleChangeRole(u.id, u.role_id)}
+                    >
+                      {u.role_id === 1 ? "ChangeToAdmin" : "ChangeToUser"}
                     </button>
                   </td>
                 </tr>

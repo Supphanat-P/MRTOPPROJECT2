@@ -12,6 +12,7 @@ import {
   getUserByusername,
   getAllUsers,
   deleteUser,
+  updateUserRole,
 } from "../controllers/usersControllers.js";
 
 const usersRouter = Router();
@@ -138,6 +139,39 @@ usersRouter.get("/getRoleNameByUserId", async (req, res) => {
   } catch (err) {
     console.error("Router error:", err);
     res.status(500).json({ message: "Failed to fetch role" });
+  }
+});
+usersRouter.put("/update-role/:id", jwtMiddleware, async (req, res) => {
+  try {
+    // เช็คว่าเป็น admin
+    if (req.jwtexpired || req.role !== "admin") {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+
+    const userId = Number(req.params.id);
+    const { role_id } = req.body;
+
+    if (isNaN(userId)) {
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
+
+    if (![1, 2].includes(role_id)) {
+      return res.status(400).json({ message: "Invalid role_id" });
+    }
+
+    // ห้ามแก้ role ตัวเอง
+    if (req.user_id === userId) {
+      return res.status(400).json({
+        message: "You cannot change your own role"
+      });
+    }
+
+    await updateUserRole(userId, role_id);
+
+    res.json({ message: "Role updated successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: err.message });
   }
 });
 

@@ -40,6 +40,7 @@ export default function PacketDashboard() {
   const [currentPage, setCurrentPage] = useState(0);
   const [getAll, setGetAll] = useState(false);
   const PAGE_SIZE = 12;
+  const [alertMsg, setAlertMsg] = useState(null);
 
   useEffect(() => {
     const init = async () => {
@@ -50,20 +51,40 @@ export default function PacketDashboard() {
         },
       });
 
+      // โหลด device
       fetch("/api/devices")
         .then((r) => r.json())
         .then(setDevices)
-        .catch(() => {});
+        .catch(() => { });
 
+      // รับ packet
       socketRef.current.on("packetBatch", (batch) =>
-        setPackets((p) => [...p, ...batch]),
+        setPackets((p) => [...p, ...batch])
       );
+
+      // รับ ip list
       socketRef.current.on("ipList", setIpList);
+
+      // รับ ALERT จาก backend
+      socketRef.current.on("securityAlert", (data) => {
+        console.log("🚨 ALERT:", data);
+
+        setAlertMsg(`${data.message} (${data.total || data.rate})`);
+
+        setTimeout(() => {
+          setAlertMsg(null);
+        }, 3000);
+      });
     };
 
     init();
 
-    return () => socketRef.current?.disconnect();
+    return () => {
+      socketRef.current?.off("packetBatch");
+      socketRef.current?.off("ipList");
+      socketRef.current?.off("securityAlert");
+      socketRef.current?.disconnect();
+    };
   }, []);
 
   useEffect(() => setDisplayPackets([...packets]), [packets]);
@@ -186,41 +207,11 @@ export default function PacketDashboard() {
   const countLineData = {
     labels: last30.map((p) => new Date(p.timestamp).toLocaleTimeString()),
     datasets: [
-      {
-        label: "TCP",
-        data: summedCounts.map((c) => c.TCP),
-        borderColor: "#50e3c2",
-        fill: false,
-        tension: 0.3,
-      },
-      {
-        label: "UDP",
-        data: summedCounts.map((c) => c.UDP),
-        borderColor: "#bd10e0",
-        fill: false,
-        tension: 0.3,
-      },
-      {
-        label: "HTTPS",
-        data: summedCounts.map((c) => c.HTTPS),
-        borderColor: "#d85a30",
-        fill: false,
-        tension: 0.3,
-      },
-      {
-        label: "Encrypted",
-        data: summedCounts.map((c) => c.Encrypted),
-        borderColor: "#ff9900",
-        fill: false,
-        tension: 0.3,
-      },
-      {
-        label: "Plaintext",
-        data: summedCounts.map((c) => c.Plaintext),
-        borderColor: "#1d9e75",
-        fill: false,
-        tension: 0.3,
-      },
+      { label: "TCP", data: summedCounts.map((c) => c.TCP), borderColor: "#50e3c2", fill: false, tension: 0.3 },
+      { label: "UDP", data: summedCounts.map((c) => c.UDP), borderColor: "#bd10e0", fill: false, tension: 0.3 },
+      { label: "HTTPS", data: summedCounts.map((c) => c.HTTPS), borderColor: "#d85a30", fill: false, tension: 0.3 },
+      { label: "Encrypted", data: summedCounts.map((c) => c.Encrypted), borderColor: "#ff9900", fill: false, tension: 0.3 },
+      { label: "Plaintext", data: summedCounts.map((c) => c.Plaintext), borderColor: "#1d9e75", fill: false, tension: 0.3 },
     ],
   };
 
@@ -293,6 +284,22 @@ export default function PacketDashboard() {
 
   return (
     <div className="page">
+      {alertMsg && (
+        <div style={{
+          position: "fixed",
+          top: 20,
+          right: 20,
+          background: "#ff4d4f",
+          color: "#fff",
+          padding: "12px 16px",
+          borderRadius: "8px",
+          zIndex: 9999,
+          boxShadow: "0 4px 12px rgba(0,0,0,0.2)"
+        }}>
+          ⚠️ {alertMsg}
+        </div>
+      )}
+
       <div className="topbar">
         <div className="logo">
           <span className="dot" /> Packet Dashboard

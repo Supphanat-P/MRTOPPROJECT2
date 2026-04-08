@@ -278,3 +278,41 @@ body {
   border: none;
   background-color: transparent;
 }
+.btn-ChangeRole.user {
+  border: 1.5px solid #a3d4f7;
+  background: #e6f2fb;
+  color: #1b6ca8;
+}
+
+.btn-ChangeRole.user:hover {
+  background: #cfe8f9;
+  border-color: #7bb9e5;
+}
+.btn-ChangeRole.admin {
+  border: 1.5px solid #d4f4e8;
+  background: #d4f4e8;
+  color: #0e6e4e;
+}
+
+.btn-ChangeRole.admin:hover {
+  background: #d4f4e8;
+  border-color: #0e6e4e;
+}
+
+.btn-ChangeRole {
+  font-family: "DM Sans", sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  margin-top: 6px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    border-color 0.15s,
+    transform 0.1s;
+}
+
+.btn-ChangeRole:active {
+  transform: scale(0.96);
+}

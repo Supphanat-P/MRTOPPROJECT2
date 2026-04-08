@@ -35,7 +35,6 @@ app.get("/api/devices", (req, res) => {
 
 io.on("connection", (socket) => {
   console.log("Client connected:", socket.id);
-  console.log("Client Count:", io.sockets.sockets.size);
 
   let c;
   let linkType;
@@ -44,6 +43,11 @@ io.on("connection", (socket) => {
   let paused = false;
   let currentUserId = null;
 
+  //  security monitor
+  let packetCount = 0;
+  let totalPackets = 0;
+  let lastCheck = Date.now();
+  const MAX_PACKET_PER_SEC = 500;
   const token = socket.handshake.auth?.token;
 
   if (token) {
@@ -57,12 +61,9 @@ io.on("connection", (socket) => {
   }
 
   socket.on("startCapture", ({ deviceName }) => {
-    console.log("Start:", deviceName, "User:", currentUserId);
+    console.log("Start:", deviceName);
 
-    if (!currentUserId) {
-      console.log("No user → skip capture");
-      return;
-    }
+    if (!currentUserId) return;
 
     if (c) c.close();
     paused = false;
@@ -81,6 +82,20 @@ io.on("connection", (socket) => {
     packetBuffer = [];
 
     c.on("packet", () => {
+      packetCount++;
+      totalPackets++;
+
+      //  แจ้งเตือนทุก 1000 packet
+      if (totalPackets % 1000 === 0) {
+        console.log("⚠️ Packet ครบ:", totalPackets);
+
+        socket.emit("securityAlert", {
+          message: "Packet ถึงแล้ว",
+          total: totalPackets,
+        });
+        console.log(" ส่ง alert ไป frontend แล้ว");
+      }
+
       if (linkType !== "ETHERNET") return;
       const ret = decoders.Ethernet(buffer);
 
@@ -110,7 +125,6 @@ io.on("connection", (socket) => {
         }
 
         if (!paused) {
-          // ✅ แก้ตรงนี้
           packetBuffer.push({
             src,
             dst,
@@ -157,14 +171,33 @@ io.on("connection", (socket) => {
     }
   }, 100);
 
+  const monitor = setInterval(() => {
+    const now = Date.now();
+    const seconds = (now - lastCheck) / 1000;
+    const rate = packetCount / seconds;
+
+    if (rate > MAX_PACKET_PER_SEC) {
+      console.log("⚠️ Packet เยอะเกิน:", rate.toFixed(0));
+
+      socket.emit("securityAlert", {
+        message: "Packet ถูกส่งมามากเกินไป",
+        rate: rate.toFixed(0),
+      });
+    }
+
+    packetCount = 0;
+    lastCheck = now;
+  }, 1000);
+
   socket.on("disconnect", () => {
     console.log("Disconnected:", socket.id);
     clearInterval(interval);
+    clearInterval(monitor);
     if (c) c.close();
   });
 });
 
 const PORT = 3000;
 server.listen(PORT, () =>
-  console.log(`Backend running on http://localhost:${PORT}`),
+  console.log(`Backend running on http://localhost:${PORT}`)
 );
