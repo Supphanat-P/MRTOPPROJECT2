@@ -4,6 +4,8 @@ import Register from "./components/Register";
 import Home from "./components/Home";
 import Dashboard from "./components/Dashboard";
 import PacketDashboard from "./components/PacketDashboard";
+import History from "./components/History";
+import HistoryAdmin from "./components/HistoryAdmin"; // Jo: นำเข้า HistoryAdmin component สำหรับ Admin
 import NavBar from "./components/Navbar";
 import "./App.css";
 import { useEffect, useState } from "react";
@@ -46,6 +48,8 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/pdashboard" element={<PacketDashboard />} />
+        <Route path="/history" element={<History />} />
+        <Route path="/historyadmin" element={<HistoryAdmin />} /> {/* Jo: เพิ่ม Route สำหรับหน้า HistoryAdmin */}
       </Routes>
     </BrowserRouter>
   );
