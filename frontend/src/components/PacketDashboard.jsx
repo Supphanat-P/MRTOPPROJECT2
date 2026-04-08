@@ -111,12 +111,15 @@ export default function PacketDashboard() {
   ]).size;
   const encPct = total ? Math.round((encCount / total) * 100) : 0;
   const isLive = !!selectedDevice;
+  
   const last30 = getAll ? filtered : filtered.slice(-30);
+
   const paginatedPackets = filtered
     .slice()
     .reverse()
     .slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE);
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  
+    const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
 
   // helper: แปลง payload เป็น printable ASCII
   const sanitizePayload = (raw, maxLen = 80) => {
@@ -173,20 +176,55 @@ export default function PacketDashboard() {
     TCP: categoryCounts.slice(0, i + 1).reduce((a, b) => a + b.TCP, 0),
     UDP: categoryCounts.slice(0, i + 1).reduce((a, b) => a + b.UDP, 0),
     HTTPS: categoryCounts.slice(0, i + 1).reduce((a, b) => a + b.HTTPS, 0),
-    Encrypted: categoryCounts.slice(0, i + 1).reduce((a, b) => a + b.Encrypted, 0),
-    Plaintext: categoryCounts.slice(0, i + 1).reduce((a, b) => a + b.Plaintext, 0),
+    Encrypted: categoryCounts
+      .slice(0, i + 1)
+      .reduce((a, b) => a + b.Encrypted, 0),
+    Plaintext: categoryCounts
+      .slice(0, i + 1)
+      .reduce((a, b) => a + b.Plaintext, 0),
   }));
 
   const countLineData = {
     labels: last30.map((p) => new Date(p.timestamp).toLocaleTimeString()),
     datasets: [
-      { label: "TCP",       data: summedCounts.map((c) => c.TCP),       borderColor: "#50e3c2", fill: false, tension: 0.3 },
-      { label: "UDP",       data: summedCounts.map((c) => c.UDP),       borderColor: "#bd10e0", fill: false, tension: 0.3 },
-      { label: "HTTPS",     data: summedCounts.map((c) => c.HTTPS),     borderColor: "#d85a30", fill: false, tension: 0.3 },
-      { label: "Encrypted", data: summedCounts.map((c) => c.Encrypted), borderColor: "#ff9900", fill: false, tension: 0.3 },
-      { label: "Plaintext", data: summedCounts.map((c) => c.Plaintext), borderColor: "#1d9e75", fill: false, tension: 0.3 },
+      {
+        label: "TCP",
+        data: summedCounts.map((c) => c.TCP),
+        borderColor: "#50e3c2",
+        fill: false,
+        tension: 0.3,
+      },
+      {
+        label: "UDP",
+        data: summedCounts.map((c) => c.UDP),
+        borderColor: "#bd10e0",
+        fill: false,
+        tension: 0.3,
+      },
+      {
+        label: "HTTPS",
+        data: summedCounts.map((c) => c.HTTPS),
+        borderColor: "#d85a30",
+        fill: false,
+        tension: 0.3,
+      },
+      {
+        label: "Encrypted",
+        data: summedCounts.map((c) => c.Encrypted),
+        borderColor: "#ff9900",
+        fill: false,
+        tension: 0.3,
+      },
+      {
+        label: "Plaintext",
+        data: summedCounts.map((c) => c.Plaintext),
+        borderColor: "#1d9e75",
+        fill: false,
+        tension: 0.3,
+      },
     ],
   };
+
   const countLineOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -205,19 +243,38 @@ export default function PacketDashboard() {
     acc[p.protocol] = (acc[p.protocol] || 0) + 1;
     return acc;
   }, {});
+
   const protocolColors = {
-    HTTP: "#1d9e75", HTTPS: "#d85a30", SSH: "#4a90e2",
-    DNS: "#f5a623", TCP: "#50e3c2", UDP: "#bd10e0",
-    ICMP: "#f8e71c", OTHER: "#9b9b9b",
+    HTTP: "#1d9e75",
+    HTTPS: "#d85a30",
+    SSH: "#4a90e2",
+    DNS: "#f5a623",
+    TCP: "#50e3c2",
+    UDP: "#bd10e0",
+    ICMP: "#f8e71c",
+    OTHER: "#9b9b9b",
   };
+
   const doughnutProtocolData = {
     labels: Object.keys(protocolCounts),
-    datasets: [{
-      data: Object.values(protocolCounts),
-      backgroundColor: Object.keys(protocolCounts).map((p) => protocolColors[p] || "#ccc"),
-      borderWidth: 0,
-    }],
+    datasets: [
+      {
+        data: Object.values(protocolCounts),
+        backgroundColor: Object.keys(protocolCounts).map(
+          (p) => protocolColors[p] || "#ccc",
+        ),
+        borderWidth: 0,
+      },
+    ],
   };
+
+  const doughnutEncryptedOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    cutout: "72%",
+    plugins: { legend: { display: true, position: "right" } },
+  };
+
   const doughnutProtocolOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -227,17 +284,13 @@ export default function PacketDashboard() {
 
   const doughnutEncryptedData = {
     labels: ["Encrypted", "Plain"],
-    datasets: [{
-      data: [encCount, plainCount],
-      backgroundColor: ["#d85a30", "#1d9e75"],
-      borderWidth: 0,
-    }],
-  };
-  const doughnutEncryptedOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    cutout: "72%",
-    plugins: { legend: { display: true, position: "right" } },
+    datasets: [
+      {
+        data: [encCount, plainCount],
+        backgroundColor: ["#d85a30", "#1d9e75"],
+        borderWidth: 0,
+      },
+    ],
   };
 
   return (
@@ -255,10 +308,16 @@ export default function PacketDashboard() {
       <div className="controls">
         <div className="ctrlGroup">
           <span className="label">Device</span>
-          <select className="select" value={selectedDevice} onChange={handleDeviceChange}>
+          <select
+            className="select"
+            value={selectedDevice}
+            onChange={handleDeviceChange}
+          >
             <option value="">— select interface —</option>
             {devices.map((d) => (
-              <option key={d.name} value={d.name}>{d.desc || d.name}</option>
+              <option key={d.name} value={d.name}>
+                {d.desc || d.name}
+              </option>
             ))}
           </select>
         </div>
@@ -272,14 +331,22 @@ export default function PacketDashboard() {
             onChange={(e) => setFilterIP(e.target.value)}
             placeholder="e.g. 192.168.1.1"
           />
-          <select className="select" value={filterIP} onChange={(e) => setFilterIP(e.target.value)}>
+          <select
+            className="select"
+            value={filterIP}
+            onChange={(e) => setFilterIP(e.target.value)}
+          >
             <option value="">All IPs</option>
             {ipList.map((ip) => (
-              <option key={ip} value={ip}>{ip}</option>
+              <option key={ip} value={ip}>
+                {ip}
+              </option>
             ))}
           </select>
         </div>
-        <button className="btnClear" onClick={() => setFilterIP("")}>Show all</button>
+        <button className="btnClear" onClick={() => setFilterIP("")}>
+          Show all
+        </button>
         <button className="btnClear" onClick={togglePause}>
           {isPaused ? "Resume" : "Pause"}
         </button>
@@ -313,21 +380,31 @@ export default function PacketDashboard() {
           />
           <span className="slider"></span>
         </label>
-        <span className="switchLabel">{getAll ? "All packets" : "Last 30 packets"}</span>
+        <span className="switchLabel">
+          {getAll ? "All packets" : "Last 30 packets"}
+        </span>
       </div>
 
       <div className="chartsRow">
+
         <div className="card" style={{ height: 200 }}>
           <Line data={lineData} options={lineOptions} />
         </div>
+        
         <div className="card" style={{ height: 200 }}>
-          <Doughnut data={doughnutProtocolData} options={doughnutProtocolOptions} />
+          <Doughnut
+            data={doughnutProtocolData}
+            options={doughnutProtocolOptions}
+          />
         </div>
         <div className="card" style={{ height: 200 }}>
           <Line data={countLineData} options={countLineOptions} />
         </div>
         <div className="card" style={{ height: 200 }}>
-          <Doughnut data={doughnutEncryptedData} options={doughnutEncryptedOptions} />
+          <Doughnut
+            data={doughnutEncryptedData}
+            options={doughnutEncryptedOptions}
+          />
         </div>
       </div>
 
@@ -415,7 +492,9 @@ export default function PacketDashboard() {
             >
               Prev
             </button>
-            <span>Page {currentPage + 1} of {totalPages || 1}</span>
+            <span>
+              Page {currentPage + 1} of {totalPages || 1}
+            </span>
             <button
               onClick={() =>
                 setCurrentPage((p) => Math.min(p + 1, totalPages - 1))
@@ -478,7 +557,9 @@ export default function PacketDashboard() {
                 )}
                 {selectedPacket.payload && (
                   <tr>
-                    <td style={{ verticalAlign: "top", paddingTop: 6 }}>Payload:</td>
+                    <td style={{ verticalAlign: "top", paddingTop: 6 }}>
+                      Payload:
+                    </td>
                     <td>
                       <pre
                         style={{
@@ -509,8 +590,12 @@ export default function PacketDashboard() {
                           gap: 12,
                         }}
                       >
-                        <span>printable ASCII · non-printable → <code>.</code></span>
-                        <span>{selectedPacket.payload.length} chars captured</span>
+                        <span>
+                          printable ASCII · non-printable → <code>.</code>
+                        </span>
+                        <span>
+                          {selectedPacket.payload.length} chars captured
+                        </span>
                         {selectedPacket.method && (
                           <span
                             style={{

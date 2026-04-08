@@ -171,8 +171,14 @@ io.on("connection", (socket) => {
     });
   });
 
-  socket.on("pauseCapture", () => (paused = true));
-  socket.on("resumeCapture", () => (paused = false));
+  socket.on(
+    "pauseCapture",
+    () => (console.log(socket.id, "Pause"), (paused = true)),
+  );
+  socket.on(
+    "resumeCapture",
+    () => (console.log(socket.id, "Resume"), (paused = false)),
+  );
 
   const interval = setInterval(async () => {
     if (!paused && packetBuffer.length > 0) {
