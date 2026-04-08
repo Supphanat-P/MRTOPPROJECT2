@@ -84,7 +84,7 @@ function Dashboard() {
     }
 
     try {
-      const res = await axios.get("http://localhost:3000/users/verify", {
+      const res = await axios.get("/api/users/verify", {
         headers: { Authorization: `Bearer ${token}` },
       });
       console.log(res.data.role);
@@ -99,7 +99,7 @@ function Dashboard() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const res = await axios.get("http://localhost:3000/users/getAllUsers", {
+      const res = await axios.get("/api/users/getAllUsers", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUsers(res.data);
@@ -127,7 +127,7 @@ function Dashboard() {
     if (!window.confirm("Are you sure you want to delete this user?")) return;
 
     try {
-      await axios.delete(`http://localhost:3000/users/${id}`, {
+      await axios.delete(`/api/users/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       alert("User deleted!");

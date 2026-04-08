@@ -13,13 +13,11 @@ body {
   padding: 40px 20px;
 }
 
-/* ─── Page wrapper ─── */
 .dashboard {
   max-width: 860px;
   margin: 0 auto;
 }
 
-/* ─── Header ─── */
 .dashboard__header {
   display: flex;
   align-items: flex-end;
@@ -50,7 +48,6 @@ body {
   padding-bottom: 4px;
 }
 
-/* ─── Search bar ─── */
 .dashboard__search-wrap {
   position: relative;
   margin-bottom: 16px;
@@ -89,7 +86,6 @@ body {
   border-color: #1a1916;
 }
 
-/* ─── Table card ─── */
 .dashboard__card {
   background: #ffffff;
   border-radius: 16px;
@@ -97,13 +93,11 @@ body {
   overflow: hidden;
 }
 
-/* ─── Table ─── */
 .dashboard__table {
   width: 100%;
   border-collapse: collapse;
 }
 
-/* ─── Table head ─── */
 .dashboard__table thead tr {
   border-bottom: 1.5px solid #e8e7e2;
 }
@@ -118,7 +112,6 @@ body {
   text-align: left;
 }
 
-/* ─── Table body ─── */
 .dashboard__table tbody tr {
   border-bottom: 1px solid #f0efe9;
   transition: background 0.1s;
@@ -139,14 +132,12 @@ body {
   vertical-align: middle;
 }
 
-/* ─── ID cell ─── */
 .cell-id {
   font-family: "DM Mono", monospace;
   font-size: 12px;
   color: #c0bfb8;
 }
 
-/* ─── User cell ─── */
 .user-cell {
   display: flex;
   align-items: center;
@@ -193,7 +184,6 @@ body {
   font-weight: 400;
 }
 
-/* ─── Role badge ─── */
 .role-badge {
   display: inline-flex;
   align-items: center;
@@ -236,7 +226,6 @@ body {
   background: #a09f99;
 }
 
-/* ─── Delete button ─── */
 .btn-delete {
   font-family: "DM Sans", sans-serif;
   font-size: 12px;
@@ -262,7 +251,6 @@ body {
   transform: scale(0.96);
 }
 
-/* ─── Empty state ─── */
 .dashboard__empty {
   padding: 60px 20px;
   text-align: center;

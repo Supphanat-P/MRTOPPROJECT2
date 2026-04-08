@@ -1,6 +1,5 @@
 @import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&display=swap");
 
-/* ─── Navbar shell ─── */
 .navbar {
   display: flex;
   align-items: center;
@@ -15,7 +14,6 @@
   z-index: 100;
 }
 
-/* ─── Logo ─── */
 .navbar__logo a {
   display: flex;
   align-items: center;
@@ -35,7 +33,6 @@
   flex-shrink: 0;
 }
 
-/* ─── Nav links ─── */
 .navbar__links {
   display: flex;
   align-items: center;
@@ -69,14 +66,12 @@
   color: #ffffff;
 }
 
-/* ─── Right side ─── */
 .navbar__right {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-/* ─── Avatar chip ─── */
 .navbar__avatar {
   width: 32px;
   height: 32px;
@@ -92,7 +87,6 @@
   flex-shrink: 0;
 }
 
-/* ─── Logout button ─── */
 .navbar__logout {
   font-family: "DM Sans", sans-serif;
   font-size: 13px;
@@ -126,19 +120,4 @@
   width: 14px;
   height: 14px;
   flex-shrink: 0;
-}
-
-/* ─── Mobile ─── */
-@media (max-width: 640px) {
-  .navbar {
-    padding: 0 18px;
-  }
-
-  .navbar__links {
-    display: none;
-  }
-
-  .navbar__avatar {
-    display: none;
-  }
 }

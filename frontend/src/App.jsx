@@ -21,7 +21,7 @@ function App() {
       axios.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
       axios
-        .get("http://localhost:3000/users/verify")
+        .get("/api/users/verify")
         .then((res) => {
           setCurrUser({
             role: res.data.role,
