@@ -409,19 +409,39 @@ export default function PacketDashboard() {
             </tbody>
           </table>
 
-          <div className="paginationControls">
+         <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "16px", marginTop: "24px" }}>
             <button
               onClick={() => setCurrentPage((p) => Math.max(p - 1, 0))}
               disabled={currentPage === 0}
+              style={{
+                padding: "8px 16px",
+                border: "none",
+                borderRadius: "4px",
+                backgroundColor: currentPage === 0 ? "#f0f0f0" : "#1890ff",
+                color: currentPage === 0 ? "#a0a0a0" : "white",
+                cursor: currentPage === 0 ? "not-allowed" : "pointer",
+                fontWeight: "bold",
+                boxShadow: "0 2px 0 rgba(0,0,0,0.015)"
+              }}
             >
               Prev
             </button>
-            <span>Page {currentPage + 1} of {totalPages || 1}</span>
+            <span style={{ fontSize: "14px", fontWeight: "500", color: "#333" }}>Page {currentPage + 1} of {totalPages || 1}</span>
             <button
               onClick={() =>
                 setCurrentPage((p) => Math.min(p + 1, totalPages - 1))
               }
               disabled={currentPage >= totalPages - 1}
+               style={{
+                padding: "8px 16px",
+                border: "none",
+                borderRadius: "4px",
+                backgroundColor: currentPage >= totalPages - 1 ? "#f0f0f0" : "#1890ff",
+                color: currentPage >= totalPages - 1 ? "#a0a0a0" : "white",
+                cursor: currentPage >= totalPages - 1 ? "not-allowed" : "pointer",
+                fontWeight: "bold",
+                boxShadow: "0 2px 0 rgba(0,0,0,0.015)"
+              }}
             >
               Next
             </button>
