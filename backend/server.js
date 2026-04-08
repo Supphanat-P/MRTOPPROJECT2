@@ -117,6 +117,7 @@ io.on("connection", (socket) => {
         ipSet.add(dst);
 
         let payload = null;
+        let method = null;
 
         try {
           let dataOffset = null;
@@ -142,18 +143,16 @@ io.on("connection", (socket) => {
               break;
           }
 
-          if (dataOffset !== null) {
-            payload = buffer
-              .slice(dataOffset, dataOffset + 200)
-              .toString("utf8")
-              .replace(/\0/g, "");
+          if (dataOffset !== null && dataOffset < buffer.length) {
+            payload = buffer.slice(dataOffset);
+            const text = payload.toString("utf8");
+            if (/^[A-Z]+ /.test(text)) {
+              method = text.split(" ")[0];
+            }
           }
-        } catch (e) {
+        } catch (err) {
           payload = null;
         }
-
-        const method =
-          payload && /^[A-Z]+ /.test(payload) ? payload.split(" ")[0] : null;
 
         packetBuffer.push({
           src,
@@ -164,7 +163,7 @@ io.on("connection", (socket) => {
           timestamp: Date.now(),
           srcPort,
           dstPort,
-          payload,
+          payload: payload ? payload.toString("hex") : null,
           method,
         });
       }
