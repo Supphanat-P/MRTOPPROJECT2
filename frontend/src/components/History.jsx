@@ -108,7 +108,7 @@ function History() {
                   <td>{packet.src}</td>
                   <td>{packet.dst}</td>
                   <td>
-                    <span className="protocol-badge"> 
+                    <span className="protocol-badge">
                       {packet.protocol}
                     </span>
                   </td>
@@ -138,6 +138,13 @@ function History() {
           <div className="pagination-container">
             <button
               className="btn-pagination"
+              onClick={() => setCurrentPage(0)}
+              disabled={currentPage === 0}
+            >
+              First
+            </button>
+            <button
+              className="btn-pagination"
               onClick={() => setCurrentPage((p) => Math.max(p - 1, 0))}
               disabled={currentPage === 0}
             >
@@ -150,6 +157,13 @@ function History() {
               disabled={currentPage >= totalPages - 1}
             >
               Next
+            </button>
+            <button
+              className="btn-pagination"
+              onClick={() => setCurrentPage(totalPages - 1)}
+              disabled={currentPage >= totalPages - 1}
+            >
+              Last
             </button>
           </div>
         </div>
