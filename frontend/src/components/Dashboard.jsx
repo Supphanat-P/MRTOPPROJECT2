@@ -84,7 +84,7 @@ function Dashboard() {
     }
 
     try {
-      const res = await axios.get("http://localhost:3000/users/verify", {
+      const res = await axios.get("/api/users/verify", {
         headers: { Authorization: `Bearer ${token}` },
       });
       console.log(res.data.role);
@@ -99,7 +99,7 @@ function Dashboard() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const res = await axios.get("http://localhost:3000/users/getAllUsers", {
+      const res = await axios.get("/api/users/getAllUsers", {
         headers: { Authorization: `Bearer ${token}` },
       });
       setUsers(res.data);
@@ -127,7 +127,7 @@ function Dashboard() {
     if (!window.confirm("Are you sure you want to delete this user?")) return;
 
     try {
-      await axios.delete(`http://localhost:3000/users/${id}`, {
+      await axios.delete(`/api/users/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       alert("User deleted!");
@@ -137,7 +137,26 @@ function Dashboard() {
       alert(err.response?.data?.message || "Failed to delete user");
     }
   };
+  const handleChangeRole = async (id, currentRoleId) => {
+    // 🔥 สลับ 1 ↔ 2
+    const newRoleId = currentRoleId === 2 ? 1 : 2;
 
+    try {
+      await axios.put(
+        `/api/users/update-role/${id}`,
+        { role_id: newRoleId },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      alert("เปลี่ยน role สำเร็จ");
+      fetchUsers();
+    } catch (err) {
+      console.error(err.response?.data || err);
+      alert(err.response?.data?.message || "เปลี่ยน role ไม่สำเร็จ");
+    }
+  };
   const filtered = users.filter((u) =>
     u.username.toLowerCase().includes(search.toLowerCase()),
   );
@@ -215,6 +234,13 @@ function Dashboard() {
                       onClick={() => handleDelete(u.id)}
                     >
                       Delete
+                    </button>
+                    <button
+                      className={`btn-ChangeRole ${u.role_id === 1 ? "user" : "admin"
+                        }`}
+                      onClick={() => handleChangeRole(u.id, u.role_id)}
+                    >
+                      {u.role_id === 1 ? "ChangeToAdmin" : "ChangeToUser"}
                     </button>
                   </td>
                 </tr>

@@ -6,7 +6,6 @@ const packetsRouter = Router();
 packetsRouter.post("/save", async (req, res) => {
   try {
     const { packets, userId } = req.body;
-
     await savePackets(packets, userId);
 
     res.json({ message: "Saved successfully" });

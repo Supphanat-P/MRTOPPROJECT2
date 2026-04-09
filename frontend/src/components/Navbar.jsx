@@ -8,7 +8,6 @@ const NAV_LINKS = [
   { to: "/home", label: "Home" },
   { to: "/dashboard", label: "Users Managements" },
   { to: "/pdashboard", label: "Packets" },
-  { to: "/History", label: "History" },
 ];
 
 function LogoutIcon() {
@@ -74,6 +73,17 @@ function NavBar({ currUser, setToken }) {
             </Link>
           </li>
         ))}
+        {isLogin && (
+          <li>
+            {/* Jo: เพิ่มเงื่อนไขตรวจสอบ role ถ้าเป็น admin ให้ลิงก์ไปที่ /historyadmin ถ้าเป็น user ปกติให้ไปที่ /history */}
+            <Link 
+              to={currUser?.role === 'admin' ? '/historyadmin' : '/history'} 
+              className={location.pathname.startsWith('/history') ? "active" : ""}
+            >
+              History
+            </Link>
+          </li>
+        )}
       </ul>
 
       <div className="navbar__right">

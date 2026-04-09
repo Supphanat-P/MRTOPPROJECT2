@@ -9,6 +9,7 @@ import { savePackets } from "./src/controllers/packetsController.js";
 import packetsRouter from "./src/routers/packetsRouter.js";
 import usersRouter from "./src/routers/usersRouter.js";
 import userRoleRouter from "./src/role/userRoleRouter.js";
+import adminRoleRouter from "./src/routers/adminRoleRouter.js"; // Jo: นำเข้า adminRoleRouter สำหรับ API ของ Admin
 
 const app = express();
 
@@ -16,8 +17,9 @@ app.use(cors());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 
-app.use("/packets", packetsRouter);
-app.use("/users", usersRouter);
+app.use("/api/packets", packetsRouter);
+app.use("/api/users", usersRouter);
+app.use("/api/admin", adminRoleRouter); // Jo: เพิ่ม Route Prefix /admin สำหรับจัดการข้อมูลส่วนของ Admin
 app.use("/user-role", userRoleRouter);
 
 const server = http.createServer(app);
@@ -25,7 +27,7 @@ const io = new Server(server, { cors: { origin: "*" } });
 
 const PROTOCOL = decoders.PROTOCOL;
 
-app.get("/devices", (req, res) => {
+app.get("/api/devices", (req, res) => {
   const devices = Cap.deviceList().map((d) => ({
     name: d.name,
     desc: d.description,
@@ -35,7 +37,6 @@ app.get("/devices", (req, res) => {
 
 io.on("connection", (socket) => {
   console.log("Client connected:", socket.id);
-  console.log("Client Count:", io.sockets.sockets.size);
 
   let c;
   let linkType;
@@ -44,6 +45,11 @@ io.on("connection", (socket) => {
   let paused = false;
   let currentUserId = null;
 
+  //  security monitor
+  let packetCount = 0;
+  let totalPackets = 0;
+  let lastCheck = Date.now();
+  const MAX_PACKET_PER_SEC = 500;
   const token = socket.handshake.auth?.token;
 
   if (token) {
@@ -57,12 +63,9 @@ io.on("connection", (socket) => {
   }
 
   socket.on("startCapture", ({ deviceName }) => {
-    console.log("Start:", deviceName, "User:", currentUserId);
+    console.log("Start:", deviceName);
 
-    if (!currentUserId) {
-      console.log("No user → skip capture");
-      return;
-    }
+    if (!currentUserId) return;
 
     if (c) c.close();
     paused = false;
@@ -81,16 +84,28 @@ io.on("connection", (socket) => {
     packetBuffer = [];
 
     c.on("packet", () => {
-      if (linkType !== "ETHERNET") return;
+      packetCount++;
+      totalPackets++;
+      if (paused) return;
 
+      if (totalPackets % 1000 === 0) {
+        console.log("⚠️ Packet ครบ:", totalPackets);
+
+        socket.emit("securityAlert", {
+          message: "Packet ถึงแล้ว",
+          total: totalPackets,
+        });
+        console.log(" ส่ง alert ไป frontend แล้ว");
+      }
+
+      if (linkType !== "ETHERNET") return;
       const ret = decoders.Ethernet(buffer);
 
       if (ret.info.type === PROTOCOL.ETHERNET.IPV4) {
         const ip = decoders.IPV4(buffer, ret.offset);
 
-        const src = ip.info.srcaddr;
-        const dst = ip.info.dstaddr;
-
+        let src = ip.info.srcaddr;
+        let dst = ip.info.dstaddr;
         let protocol = "OTHER";
         let encrypted = false;
         let srcPort, dstPort;
@@ -99,15 +114,11 @@ io.on("connection", (socket) => {
           const tcp = decoders.TCP(buffer, ip.offset);
           srcPort = tcp.info.srcport;
           dstPort = tcp.info.dstport;
-
           if (srcPort === 443 || dstPort === 443) {
             protocol = "HTTPS";
             encrypted = true;
-          } else if (srcPort === 80 || dstPort === 80) {
-            protocol = "HTTP";
-          } else {
-            protocol = "TCP";
-          }
+          } else if (srcPort === 80 || dstPort === 80) protocol = "HTTP";
+          else protocol = "TCP";
         } else if (ip.info.protocol === 17) {
           const udp = decoders.UDP(buffer, ip.offset);
           srcPort = udp.info.srcport;
@@ -115,66 +126,33 @@ io.on("connection", (socket) => {
           protocol = "UDP";
         }
 
-        ipSet.add(src);
-        ipSet.add(dst);
-
-        let payload = null;
-
-        try {
-          let dataOffset = null;
-
-          switch (ip.info.protocol) {
-            case 6: // TCP
-              const tcp = decoders.TCP(buffer, ip.offset);
-              dataOffset = tcp.offset;
-              break;
-
-            case 17: // UDP
-              const udp = decoders.UDP(buffer, ip.offset);
-              dataOffset = udp.offset;
-              break;
-
-            case 1: // ICMP
-              const icmp = decoders.ICMP(buffer, ip.offset);
-              dataOffset = icmp.offset;
-              break;
-
-            default:
-              dataOffset = ip.offset;
-              break;
-          }
-
-          if (dataOffset !== null) {
-            payload = buffer
-              .slice(dataOffset, dataOffset + 200)
-              .toString("utf8")
-              .replace(/\0/g, "");
-          }
-        } catch (e) {
-          payload = null;
+        if (!paused) {
+          packetBuffer.push({
+            src,
+            dst,
+            protocol,
+            length: ip.info.totallen,
+            encrypted,
+            timestamp: Date.now(),
+            srcPort,
+            dstPort,
+            payload: buffer.slice(ip.offset).toString("hex").slice(0, 200),
+          });
+          ipSet.add(src);
+          ipSet.add(dst);
         }
-
-        const method =
-          payload && /^[A-Z]+ /.test(payload) ? payload.split(" ")[0] : null;
-
-        packetBuffer.push({
-          src,
-          dst,
-          protocol,
-          length: ip.info.totallen,
-          encrypted,
-          timestamp: Date.now(),
-          srcPort,
-          dstPort,
-          payload,
-          method,
-        });
       }
     });
   });
 
-  socket.on("pauseCapture", () => (paused = true));
-  socket.on("resumeCapture", () => (paused = false));
+  socket.on(
+    "pauseCapture",
+    () => (console.log(socket.id, "Pause"), (paused = true)),
+  );
+  socket.on(
+    "resumeCapture",
+    () => (console.log(socket.id, "Resume"), (paused = false)),
+  );
 
   const interval = setInterval(async () => {
     if (!paused && packetBuffer.length > 0) {
@@ -193,11 +171,28 @@ io.on("connection", (socket) => {
 
       packetBuffer = [];
     }
+  }, 0.5);
+
+  const monitor = setInterval(() => {
+    const now = Date.now();
+    const seconds = (now - lastCheck) / 1000;
+    const rate = packetCount / seconds;
+
+    if (rate > MAX_PACKET_PER_SEC) {
+      socket.emit("securityAlert", {
+        message: "Packet ถูกส่งมามากเกินไป",
+        rate: rate.toFixed(0),
+      });
+    }
+
+    packetCount = 0;
+    lastCheck = now;
   }, 100);
 
   socket.on("disconnect", () => {
     console.log("Disconnected:", socket.id);
     clearInterval(interval);
+    clearInterval(monitor);
     if (c) c.close();
   });
 });

@@ -29,12 +29,13 @@ export const savePackets = async (packets, userId) => {
     new Date(p.timestamp),
     p.srcPort || null,
     p.dstPort || null,
+    p.payload || null,
   ]);
 
   try {
     await pool.query(
       `INSERT INTO packets 
-      (user_id, src, dst, protocol, length, encrypted, timestamp, src_port, dst_port)
+      (user_id, src, dst, protocol, length, encrypted, timestamp, src_port, dst_port, payload)
       VALUES ?`,
       [values],
     );

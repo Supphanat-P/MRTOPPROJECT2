@@ -21,7 +21,7 @@ function Register() {
     setError("");
     setLoading(true);
     try {
-      await axios.post("http://localhost:3000/users/register", {
+      await axios.post("/api/users/register", {
         username,
         password,
       });

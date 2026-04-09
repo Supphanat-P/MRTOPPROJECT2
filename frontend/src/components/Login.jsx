@@ -21,7 +21,7 @@ function Login() {
     setError("");
     setLoading(true);
     axios
-      .post("http://localhost:3000/users/login", { username, password })
+      .post("/api/users/login", { username, password })
       .then((res) => {
         const token = res.data.token;
         localStorage.setItem("token", token);
