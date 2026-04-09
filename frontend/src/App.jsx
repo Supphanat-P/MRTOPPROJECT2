@@ -76,7 +76,7 @@ function App() {
         <Route path="/home" element={<Home />} />
         <Route path="/login" element={<Login setToken={setToken} />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/dashboard" element={<Dashboard currUser={currUser} />} />
         <Route path="/pdashboard" element={<PacketDashboard />} />
         <Route path="/history" element={<History />} />
         <Route path="/historyadmin" element={<HistoryAdmin />} />{" "}

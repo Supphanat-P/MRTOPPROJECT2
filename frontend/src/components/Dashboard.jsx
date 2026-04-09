@@ -20,7 +20,9 @@ function getInitials(username) {
 
 function Avatar({ username, index }) {
   const color = AVATAR_COLORS[index % AVATAR_COLORS.length];
-  return <div className={`avatar avatar--${color}`}>{getInitials(username)}</div>;
+  return (
+    <div className={`avatar avatar--${color}`}>{getInitials(username)}</div>
+  );
 }
 
 function RoleBadge({ roleId }) {
@@ -69,7 +71,7 @@ function RefreshButton({ onClick }) {
   );
 }
 
-function Dashboard() {
+function Dashboard({ currUser }) {
   const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [search, setSearch] = useState("");
@@ -138,7 +140,6 @@ function Dashboard() {
     }
   };
   const handleChangeRole = async (id, currentRoleId) => {
-    // 🔥 สลับ 1 ↔ 2
     const newRoleId = currentRoleId === 2 ? 1 : 2;
 
     try {
@@ -147,7 +148,7 @@ function Dashboard() {
         { role_id: newRoleId },
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
 
       alert("เปลี่ยน role สำเร็จ");
@@ -157,7 +158,15 @@ function Dashboard() {
       alert(err.response?.data?.message || "เปลี่ยน role ไม่สำเร็จ");
     }
   };
-  const filtered = users.filter((u) =>
+  const filterNotCurr = users.filter((u) => {
+    return u.username !== currUser.username;
+  });
+
+  const filterCurr = users.filter((u) => {
+    return u.username == currUser.username;
+  });
+
+  const filtered = filterNotCurr.filter((u) =>
     u.username.toLowerCase().includes(search.toLowerCase()),
   );
 
@@ -236,8 +245,9 @@ function Dashboard() {
                       Delete
                     </button>
                     <button
-                      className={`btn-ChangeRole ${u.role_id === 1 ? "user" : "admin"
-                        }`}
+                      className={`btn-ChangeRole ${
+                        u.role_id === 1 ? "user" : "admin"
+                      }`}
                       onClick={() => handleChangeRole(u.id, u.role_id)}
                     >
                       {u.role_id === 1 ? "ChangeToAdmin" : "ChangeToUser"}
