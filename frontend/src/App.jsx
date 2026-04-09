@@ -85,7 +85,6 @@ function App() {
         <Route path="/pdashboard" element={<PacketDashboard />} />
         <Route path="/history" element={<History />} />
         <Route path="/historyadmin" element={<HistoryAdmin />} /> {/* Jo: เพิ่ม Route สำหรับหน้า HistoryAdmin */}
-
         {/* ส่ง socket ลงไป */}
         <Route
           path="/pdashboard"
