@@ -41,7 +41,7 @@ usersRouter.post("/login", async (req, res) => {
   const user = await getUserByusername(username);
   if (!user) return res.status(404).json({ message: "User not found" });
   const valid = await bcrypt.compare(password, user.password);
-  if (!valid) return res.status(403).json({ message: "Unauthorized" });
+  if (!valid) return res.status(403).json({ message: "Password incorrect" });
 
   const role = await getRoleNamebyUserId(user.user_id);
 
@@ -162,7 +162,7 @@ usersRouter.put("/update-role/:id", jwtMiddleware, async (req, res) => {
     // ห้ามแก้ role ตัวเอง
     if (req.user_id === userId) {
       return res.status(400).json({
-        message: "You cannot change your own role"
+        message: "You cannot change your own role",
       });
     }
 

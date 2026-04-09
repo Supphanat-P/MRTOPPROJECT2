@@ -39,13 +39,10 @@ function Register() {
     <div className="auth-page">
       <div className="auth-card">
         <h1 className="auth-card__title">Create account</h1>
-        <p className="auth-card__subtitle">
-          Fill in your details to get started.
-        </p>
 
         <form onSubmit={handleSubmit}>
           <div className="auth-card__field">
-            <label className="auth-card__label">username</label>
+            <label className="auth-card__label">Username</label>
             <input
               className="auth-card__input"
               type="username"

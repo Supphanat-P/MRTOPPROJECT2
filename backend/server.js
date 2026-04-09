@@ -193,6 +193,9 @@ io.on("connection", (socket) => {
   }, 0.5);
 
   const monitor = setInterval(() => {
+    if (paused) {
+      return;
+    }
     const now = Date.now();
     const seconds = (now - lastCheck) / 1000;
     const rate = packetCount / seconds;

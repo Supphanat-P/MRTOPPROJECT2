@@ -30,12 +30,16 @@ function Login({ setToken }) {
       navigate("/home");
     } catch (err) {
       console.error(err);
-      setError("Login failed");
+      if (err.response && err.response.data && err.response.data.message) {
+        setError(err.response.data.message); // ใช้ข้อความจาก server
+      } else {
+        setError("Something went wrong");
+      }
     } finally {
       setLoading(false);
     }
   };
-  
+
   return (
     <div className="auth-page">
       <div className="auth-card">
