@@ -40,10 +40,10 @@ function LogoutIcon() {
   );
 }
 
-function NavBar({ currUser, setToken }) {
+function NavBar({ currUser, token, setToken }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const isLogin = localStorage.getItem("token");
+  const isLogin = !!token;
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -53,8 +53,6 @@ function NavBar({ currUser, setToken }) {
 
   const goToLogin = () => navigate("/login");
   const goToReg = () => navigate("/register");
-
-  console.log(currUser);
 
   return (
     <nav className="navbar">
@@ -74,7 +72,6 @@ function NavBar({ currUser, setToken }) {
         ))}
         {isLogin && (
           <li>
-            {/* Jo: เพิ่มเงื่อนไขตรวจสอบ role ถ้าเป็น admin ให้ลิงก์ไปที่ /historyadmin ถ้าเป็น user ปกติให้ไปที่ /history */}
             <Link
               to={currUser?.role === "admin" ? "/historyadmin" : "/history"}
               className={

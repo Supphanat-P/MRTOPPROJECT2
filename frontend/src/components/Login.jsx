@@ -3,36 +3,39 @@ import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import "./Auth.css";
 
-function Login() {
+function Login({ setToken }) {
   const navigate = useNavigate();
-  const [username, setusername] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [token, setToken] = useState("");
-  const isLogin = localStorage.getItem("token");
 
   useEffect(() => {
-    if (isLogin) navigate("/home");
-  }, [isLogin, navigate]);
+    const token = localStorage.getItem("token");
+    if (token) navigate("/home");
+  }, [navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
-    axios
-      .post("/api/users/login", { username, password })
-      .then((res) => {
-        const token = res.data.token;
-        localStorage.setItem("token", token);
+    try {
+      const res = await axios.post("/api/users/login", { username, password });
+      const token = res.data.token;
 
-        setToken(token);
+      setToken(token);
 
-        navigate("/dashboard");
-      })
-      .catch((err) => console.error(err));
+      localStorage.setItem("token", token);
+
+      navigate("/home");
+    } catch (err) {
+      console.error(err);
+      setError("Login failed");
+    } finally {
+      setLoading(false);
+    }
   };
-
+  
   return (
     <div className="auth-page">
       <div className="auth-card">
@@ -49,7 +52,7 @@ function Login() {
               type="username"
               placeholder="Username"
               value={username}
-              onChange={(e) => setusername(e.target.value)}
+              onChange={(e) => setUsername(e.target.value)}
               required
             />
           </div>
