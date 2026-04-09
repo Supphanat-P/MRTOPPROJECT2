@@ -10,9 +10,9 @@ function generateRSAKeys() {
 }
 
 export default function Encryption({ currUser }) {
-  if (currUser.role !== "admin") {
-    return <div style={{ padding: 20 }}>Access denied. Admins only.</div>;
-  }
+  // if (currUser.role !== "admin") {
+  //   return <div style={{ padding: 20 }}>Access denied. Admins only.</div>;
+  // }
 
   const [text, setText] = useState("");
 
