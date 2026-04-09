@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./PacketDashboard.css"; // Reuse styling if applicable
+import "./History.css"; // Jo: เพิ่มการ import style จาก History.css เพื่อให้ปุ่มเหมือนกัน
 import "../App.css";
 
 function HistoryAdmin() {
@@ -14,23 +15,46 @@ function HistoryAdmin() {
   const [currentPage, setCurrentPage] = useState(0);
   const PAGE_SIZE = 50;
 
+  // Jo: แยกฟังก์ชัน fetchData ออกมาเพื่อให้สามารถเรียกใช้ตอนกดปุ่ม Refresh และทำงานหลังลบข้อมูลได้ทันที
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const [packetsRes, usersRes] = await Promise.all([
+        axios.get("/api/admin/packets"),
+        axios.get("/api/admin/users"),
+      ]);
+      setPackets(packetsRes.data);
+      setUsers(usersRes.data);
+    } catch (error) {
+      console.error("Error fetching admin data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [packetsRes, usersRes] = await Promise.all([
-          axios.get("/api/admin/packets"),
-          axios.get("/api/admin/users"),
-        ]);
-        setPackets(packetsRes.data);
-        setUsers(usersRes.data);
-      } catch (error) {
-        console.error("Error fetching admin data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchData();
   }, []);
+
+  // Jo: เพิ่มฟังก์ชันสำหรับลบ Packets โดยระบุ User ID ของผู้ใช้คนนั้นๆ
+  const handleClearUserPackets = async () => {
+    if (!selectedUser) {
+      alert("กรุณาเลือก User ที่ต้องการเคลียร์ข้อมูล");
+      return;
+    }
+    const userToClear = users.find(u => u.user_id === Number(selectedUser));
+    if (window.confirm(`Are you sure you want to clear packets for user: ${userToClear?.username}?`)) {
+      setLoading(true);
+      try {
+        await axios.delete(`/api/admin/packets/user/${selectedUser}`);
+        await fetchData();
+      } catch (error) {
+        console.error("Failed to clear packets for user:", error);
+        alert("Failed to clear packets");
+        setLoading(false);
+      }
+    }
+  };
 
   const handleUserChange = (e) => {
     setSelectedUser(e.target.value);
@@ -91,6 +115,24 @@ function HistoryAdmin() {
               </option>
             ))}
           </select>
+          {/* Jo: ปุ่ม Clear User Packets จะแสดงให้กดได้ก็ต่อเมื่อมีการเลือก User ก่อนจากแท็บ Filter */}
+          {selectedUser && (
+            <button 
+              className="btn-clear"
+              onClick={handleClearUserPackets} 
+              style={{ marginLeft: "10px" }}
+            >
+              Clear User Packets
+            </button>
+          )}
+          {/* Jo: ปุ่ม Refresh เพื่อสั่ง fetch ข้อมูล Packets และ Users ใหม่ทันที */}
+          <button 
+            className="btn-pagination"
+            onClick={fetchData} 
+            style={{ marginLeft: "10px" }}
+          >
+            Refresh
+          </button>
         </div>
         <div
           className="metricCard"
@@ -211,24 +253,42 @@ function HistoryAdmin() {
               </tbody>
             </table>
 
-            <div className="paginationControls">
+            <div className="pagination-container">
+              {/* Jo: ปุ่มหน้าแรก */}
               <button
+                className="btn-pagination"
+                onClick={() => setCurrentPage(0)}
+                disabled={currentPage === 0}
+              >
+                First
+              </button>
+              <button
+                className="btn-pagination"
                 onClick={() => setCurrentPage((p) => Math.max(p - 1, 0))}
                 disabled={currentPage === 0}
               >
                 Prev
               </button>
-              <span>
+              <span className="pagination-text">
                 Page {filteredPackets.length > 0 ? currentPage + 1 : 0} of{" "}
                 {totalPages || 1}
               </span>
               <button
+                className="btn-pagination"
                 onClick={() =>
                   setCurrentPage((p) => Math.min(p + 1, totalPages - 1))
                 }
                 disabled={currentPage >= totalPages - 1}
               >
                 Next
+              </button>
+              {/* Jo: ปุ่มหน้าสุดท้าย */}
+              <button
+                className="btn-pagination"
+                onClick={() => setCurrentPage(Math.max(0, totalPages - 1))}
+                disabled={currentPage >= totalPages - 1 || totalPages === 0}
+              >
+                Last
               </button>
             </div>
           </div>

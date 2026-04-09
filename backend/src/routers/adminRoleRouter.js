@@ -49,4 +49,19 @@ adminRoleRouter.get("/users", async (req, res) => {
   }
 });
 
+// Jo: เพิ่ม Route สำหรับให้ Admin เคลียร์ Packets ของ User รายคนตามที่ระบุใน userId
+adminRoleRouter.delete("/packets/user/:userId", async (req, res) => {
+  const { userId } = req.params;
+  try {
+    const connection = await mysql.createConnection(config);
+    const sql = "DELETE FROM packets WHERE user_id = ?";
+    await connection.execute(sql, [userId]);
+    connection.end();
+    res.json({ message: "Packets cleared for user" });
+  } catch (error) {
+    console.error("Failed to clear user packets:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
 export default adminRoleRouter;
