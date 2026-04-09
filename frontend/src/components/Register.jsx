@@ -49,7 +49,7 @@ function Register() {
             <input
               className="auth-card__input"
               type="username"
-              placeholder="you@example.com"
+              placeholder="Username"
               value={username}
               onChange={(e) => setusername(e.target.value)}
               required

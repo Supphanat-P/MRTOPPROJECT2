@@ -85,10 +85,10 @@ function NavBar({ currUser, setToken }) {
             </Link>
           </li>
         )}
-        {isLogin && (
+        {isLogin && currUser?.role === "admin" && (
           <li>
             <Link
-              to={currUser?.role === "admin" ? "/dashboard" : ""}
+              to="/dashboard"
               className={
                 location.pathname.startsWith("/dashboard") ? "active" : ""
               }

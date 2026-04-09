@@ -47,7 +47,7 @@ function Login() {
             <input
               className="auth-card__input"
               type="username"
-              placeholder="you@example.com"
+              placeholder="Username"
               value={username}
               onChange={(e) => setusername(e.target.value)}
               required
@@ -59,7 +59,7 @@ function Login() {
             <input
               className="auth-card__input"
               type="password"
-              placeholder="Your password"
+              placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required

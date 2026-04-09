@@ -44,7 +44,8 @@ export default function PacketDashboard() {
   const PAGE_SIZE = 12;
   const [alertMsg, setAlertMsg] = useState(null);
   const [isCapturing, setIsCapturing] = useState(false);
-
+  const [isLogin, setIsLogin] = useState(!!localStorage.getItem("token"));
+  
   useEffect(() => {
     const init = async () => {
       socketRef.current = io("/", {
@@ -114,6 +115,7 @@ export default function PacketDashboard() {
   };
 
   const toggleCapture = () => {
+    if (!isLogin) return alert("Need Login");
     if (!selectedDevice) return alert("Please select a device first!");
 
     if (isCapturing) {
