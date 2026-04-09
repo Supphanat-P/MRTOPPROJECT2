@@ -61,7 +61,13 @@ function HistoryAdmin() {
     ICMP: "#f8e71c",
     OTHER: "#9b9b9b",
   };
-
+  const tcpColors = {
+    SYN: "#ff9800",
+    ACK: "#4caf50",
+    FIN: "#f44336",
+    RST: "#9c27b0",
+    OTHER: "#ccc",
+  };
   return (
     <div className="page" style={{ padding: "20px" }}>
       <div className="topbar">
@@ -117,6 +123,7 @@ function HistoryAdmin() {
                   <th>Source</th>
                   <th>Destination</th>
                   <th>Protocol</th>
+                  <th>TCP</th>
                   <th>Length</th>
                   <th>Encrypted</th>
                   <th>Payload</th>
@@ -153,6 +160,30 @@ function HistoryAdmin() {
                         >
                           {p.protocol}
                         </span>
+                      </td>
+                      <td>
+                        {p.flags ? (
+                          Object.entries(p.flags)
+                            .filter(([flag, val]) => val)
+                            .map(([flag], idx) => (
+                              <span
+                                key={idx}
+                                style={{
+                                  padding: "2px 6px",
+                                  borderRadius: 4,
+                                  backgroundColor: tcpColors[flag] || "#ccc",
+                                  color: "#fff",
+                                  fontWeight: "bold",
+                                  fontSize: 12,
+                                  marginRight: 4,
+                                }}
+                              >
+                                {flag}
+                              </span>
+                            ))
+                        ) : (
+                          <span style={{ color: "#999" }}>—</span>
+                        )}
                       </td>
                       <td>{p.length} B</td>
                       <td className={p.encrypted ? "enc-yes" : "enc-no"}>

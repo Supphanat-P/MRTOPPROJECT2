@@ -24,6 +24,8 @@ export const savePackets = async (packets, userId) => {
     p.src,
     p.dst,
     p.protocol,
+    Array.isArray(p.tcpType) ? p.tcpType.join("-") : p.tcpType || "OTHER",
+    JSON.stringify(p.flags || {}),
     p.length,
     p.encrypted,
     new Date(p.timestamp),
@@ -35,7 +37,7 @@ export const savePackets = async (packets, userId) => {
   try {
     await pool.query(
       `INSERT INTO packets 
-      (user_id, src, dst, protocol, length, encrypted, timestamp, src_port, dst_port, payload)
+      (user_id, src, dst, protocol, tcpType, flags, length, encrypted, timestamp, src_port, dst_port, payload)
       VALUES ?`,
       [values],
     );

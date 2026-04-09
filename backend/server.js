@@ -110,10 +110,27 @@ io.on("connection", (socket) => {
         let encrypted = false;
         let srcPort, dstPort;
 
+        let tcpType = [];
+        let tcpFlags = {};
         if (ip.info.protocol === 6) {
           const tcp = decoders.TCP(buffer, ip.offset);
           srcPort = tcp.info.srcport;
           dstPort = tcp.info.dstport;
+          const flags = tcp.info.flags;
+
+          tcpFlags = {
+            ACK: !!(flags & 0x10),
+            SYN: !!(flags & 0x02),
+            FIN: !!(flags & 0x01),
+            RST: !!(flags & 0x04),
+          };
+
+          if (flags & 0x02) tcpType.push("SYN");
+          if (flags & 0x10) tcpType.push("ACK");
+          if (flags & 0x01) tcpType.push("FIN");
+          if (flags & 0x04) tcpType.push("RST");
+          if (tcpType.length === 0) tcpType.push("OTHER");
+          tcpType = tcpType.join("-");
           if (srcPort === 443 || dstPort === 443) {
             protocol = "HTTPS";
             encrypted = true;
@@ -131,6 +148,8 @@ io.on("connection", (socket) => {
             src,
             dst,
             protocol,
+            tcpType,
+            flags: tcpFlags,
             length: ip.info.totallen,
             encrypted,
             timestamp: Date.now(),

@@ -52,7 +52,21 @@ function History() {
     .slice()
     .reverse()
     .slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE);
+
   const totalPages = Math.ceil(history.length / PAGE_SIZE);
+
+  const sanitizePayload = (raw, maxLen = 80) => {
+    if (!raw) return null;
+    return raw.replace(/[^\x20-\x7E]/g, ".").slice(0, maxLen);
+  };
+
+  const tcpColors = {
+    SYN: "#ff9800",
+    ACK: "#4caf50",
+    FIN: "#f44336",
+    RST: "#9c27b0",
+    OTHER: "#ccc",
+  };
 
   return (
     <div className="History" style={{ padding: "20px" }}>
@@ -97,6 +111,7 @@ function History() {
               <th>Source IP</th>
               <th>Destination IP</th>
               <th>Protocol</th>
+              <th>FLAG</th>
               <th>Length</th>
               <th>Encrypted</th>
               <th>Payload</th>
@@ -121,9 +136,48 @@ function History() {
                     {packet.protocol}
                   </span>
                 </td>
+                <td>
+                  {packet.flags ? (
+                    Object.entries(packet.flags)
+                      .filter(([flag, val]) => val)
+                      .map(([flag], idx) => (
+                        <span
+                          key={idx}
+                          style={{
+                            padding: "2px 6px",
+                            borderRadius: 4,
+                            backgroundColor: tcpColors[flag] || "#ccc",
+                            color: "#fff",
+                            fontWeight: "bold",
+                            fontSize: 12,
+                            marginRight: 4,
+                          }}
+                        >
+                          {flag}
+                        </span>
+                      ))
+                  ) : (
+                    <span style={{ color: "#999" }}>—</span>
+                  )}
+                </td>
                 <td>{packet.length}</td>
                 <td>{packet.encrypted ? "Yes" : "No"}</td>
-                <td>{packet.payload}</td>
+                <td
+                  style={{
+                    maxWidth: 200,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                    fontSize: "11px",
+                    fontFamily: "monospace",
+                    color: "#888",
+                  }}
+                  title={sanitizePayload(packet.payload, 500) || ""}
+                >
+                  {sanitizePayload(packet.payload) || (
+                    <span style={{ color: "#ccc" }}>—</span>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
