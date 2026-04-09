@@ -1,0 +1,141 @@
+/* ===== CONTAINER ===== */
+.encryption-container {
+  max-width: 900px;
+  margin: 50px auto;
+  padding: 30px;
+  border-radius: 16px;
+  background: #ffffff;
+  color: #1a1916;
+  border: 1.5px solid #e8e7e2;
+  font-family: "DM Sans", sans-serif;
+}
+
+/* ===== TITLE ===== */
+.encryption-container .title {
+  font-size: 24px;
+  font-weight: 600;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+/* ===== INPUT ===== */
+.encryption-container .input-box {
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: 12px;
+  border: 1.5px solid #e8e7e2;
+  background: #ffffff;
+  color: #1a1916;
+  margin-bottom: 15px;
+  margin-top: 15px;
+}
+
+.encryption-container .input-box:focus {
+  border-color: #1a1916;
+  outline: none;
+}
+
+/* ===== BUTTON BASE ===== */
+.encryption-container .btn {
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  margin-right: 10px;
+  transition: 0.15s;
+}
+
+.encryption-container .btn:active {
+  transform: scale(0.95);
+}
+
+/* ===== BUTTON COLORS ===== */
+.encryption-container .btn-aes {
+  background: #ddeeff;
+  color: #1a5fa8;
+}
+
+.encryption-container .btn-aes:hover {
+  background: #cfe8f9;
+}
+
+.encryption-container .btn-rsa {
+  background: #eae6fb;
+  color: #5b48c4;
+}
+
+.encryption-container .btn-rsa:hover {
+  background: #dcd4f8;
+}
+
+.encryption-container .btn-copy {
+  background: #d4f4e8;
+  color: #0e6e4e;
+  margin-left: 10px;
+}
+
+.encryption-container .btn-copy:hover {
+  background: #bff0dc;
+}
+
+.encryption-container .btn-decrypt {
+  background: #d4f4e8;
+  color: #0e6e4e;
+}
+
+.encryption-container .btn-delete {
+  background: #fff5f5;
+  color: #c0392b;
+  border: 1.5px solid #fcd5d5;
+  margin-left: 10px;
+}
+
+.encryption-container .btn-delete:hover {
+  background: #fde8e8;
+}
+
+/* ===== CARD ===== */
+.encryption-container .card {
+  margin-top: 20px;
+  padding: 15px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1.5px solid #e8e7e2;
+}
+
+/* ===== TEXT ===== */
+.encryption-container .text {
+  margin-top: 6px;
+  font-size: 14px;
+  word-break: break-all;
+}
+
+/* ===== DECRYPT ===== */
+.encryption-container .decrypt-box {
+  margin-top: 30px;
+  padding: 20px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1.5px solid #e8e7e2;
+}
+
+/* ===== RESULT ===== */
+.encryption-container .result {  
+  margin-top: 15px;
+  font-size: 14px;
+  color: #0e6e4e;
+  font-weight: 500;
+}
+
+.encryption-container .result {
+  margin-top: 10px;
+  font-weight: bold;
+  color: #22c55e;
+}
+.encryption-container .btn-delete {
+  background: #fff5f5;
+  color: #c0392b;
+  margin-left: 10px;
+}

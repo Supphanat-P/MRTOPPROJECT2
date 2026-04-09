@@ -11,6 +11,7 @@ import "./App.css";
 import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import io from "socket.io-client";
+import Encryption from "./components/Encryption";
 
 function App() {
   const [currUser, setCurrUser] = useState(null);
@@ -80,6 +81,7 @@ function App() {
         <Route path="/pdashboard" element={<PacketDashboard />} />
         <Route path="/history" element={<History />} />
         <Route path="/historyadmin" element={<HistoryAdmin />} />{" "}
+        <Route path="/encryptionadmin" element={<Encryption currUser={currUser} />} />
         {/* Jo: เพิ่ม Route สำหรับหน้า HistoryAdmin */}
         {/* ส่ง socket ลงไป */}
         <Route
