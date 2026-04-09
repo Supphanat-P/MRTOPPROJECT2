@@ -7,7 +7,7 @@ export default defineConfig({
     host: true,
     port: 5173,
     allowedHosts: [
-      "uncradled-augustine-systematic.ngrok-free.dev",
+      "endosporously-submolecular-shin.ngrok-free.dev",
       "localhost",
       "all"
     ],

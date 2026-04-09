@@ -45,7 +45,7 @@ export default function PacketDashboard() {
   const [alertMsg, setAlertMsg] = useState(null);
   const [isCapturing, setIsCapturing] = useState(false);
   const [isLogin, setIsLogin] = useState(!!localStorage.getItem("token"));
-  
+
   useEffect(() => {
     const init = async () => {
       socketRef.current = io("/", {
@@ -508,7 +508,7 @@ export default function PacketDashboard() {
                 <th>Source</th>
                 <th>Destination</th>
                 <th>Protocol</th>
-                <th>TCP</th>
+                <th>Flags</th>
                 <th>Length</th>
                 <th>Encrypted</th>
                 <th>Payload</th>
