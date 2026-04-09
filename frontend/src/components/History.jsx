@@ -64,6 +64,16 @@ function History() {
     return raw.replace(/[^\x20-\x7E]/g, ".").slice(0, maxLen);
   };
 
+  const protocolColors = {
+    HTTP: "#1d9e75",
+    HTTPS: "#ff9900",
+    SSH: "#4a90e2",
+    DNS: "#f5a623",
+    TCP: "#50e3c2",
+    UDP: "#bd10e0",
+    ICMP: "#f8e71c",
+    OTHER: "#9b9b9b",
+  };
   const tcpColors = {
     SYN: "#ff9800",
     ACK: "#4caf50",
@@ -119,7 +129,21 @@ function History() {
                   <td>{packet.src}</td>
                   <td>{packet.dst}</td>
                   <td>
-                    <span className="protocol-badge">{packet.protocol}</span>
+                    <span
+                      style={{
+                        padding: "2px 8px",
+                        borderRadius: 20,
+                        background:
+                          (protocolColors[packet.protocol] || "#ccc") + "33",
+                        color: protocolColors[packet.protocol] || "#000",
+                        border:
+                          "1px solid " + (protocolColors[packet.protocol] || "#ccc"),
+                        fontWeight: "600",
+                        fontSize: "12px",
+                      }}
+                    >
+                      {packet.protocol}
+                    </span>
                   </td>
                   <td>
                     {packet.flags ? (

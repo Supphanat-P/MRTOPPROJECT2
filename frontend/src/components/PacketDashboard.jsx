@@ -188,7 +188,7 @@ export default function PacketDashboard() {
     maintainAspectRatio: false,
     animation: false,
     plugins: {
-      legend: { display: false },
+      legend: { display: true, position: "bottom" },
       tooltip: { mode: "index", intersect: false },
     },
     scales: {
@@ -309,14 +309,14 @@ export default function PacketDashboard() {
 
   const doughnutProtocolOptions = {
     responsive: true,
-    maintainAspectRatio: false,
-    cutout: "72%",
+    maintainAspectRatio: true,
+    cutout: "50%",
     plugins: { legend: { display: true, position: "right" } },
   };
   const doughnutEncryptedOptions = {
     responsive: true,
-    maintainAspectRatio: false,
-    cutout: "72%",
+    maintainAspectRatio: true,
+    cutout: "50%",
     plugins: { legend: { display: true, position: "right" } },
   };
 
@@ -347,7 +347,7 @@ export default function PacketDashboard() {
     responsive: true,
     maintainAspectRatio: false,
     plugins: {
-      legend: { display: false }, // ไม่ต้องโชว์ legend ถ้า color bar ชัดเจน
+      legend: { legend: false },
       tooltip: { mode: "index", intersect: false },
     },
     scales: {
@@ -458,6 +458,52 @@ export default function PacketDashboard() {
         </div>
       </div>
 
+      <div className="legendPanel">
+        <div className="legendGroup">
+          <span className="legendTitle">Protocol</span>
+          {Object.entries(protocolColors).map(([key, color]) => (
+            <div key={key} className="legendItem">
+              <span
+                className="legendColor"
+                style={{ backgroundColor: color }}
+              />
+              {key}
+            </div>
+          ))}
+        </div>
+
+        <div className="legendGroup">
+          <span className="legendTitle">TCP Flags</span>
+          {Object.entries(tcpColors).map(([key, color]) => (
+            <div key={key} className="legendItem">
+              <span
+                className="legendColor"
+                style={{ backgroundColor: color }}
+              />
+              {key}
+            </div>
+          ))}
+        </div>
+
+        <div className="legendGroup">
+          <span className="legendTitle">Encryption</span>
+          <div className="legendItem">
+            <span
+              className="legendColor"
+              style={{ backgroundColor: "#d85a30" }}
+            />
+            Encrypted (HTTPS)
+          </div>
+          <div className="legendItem">
+            <span
+              className="legendColor"
+              style={{ backgroundColor: "#1d9e75" }}
+            />
+            Plaintext (HTTP/TCP)
+          </div>
+        </div>
+      </div>
+
       <div className="control-getdata">
         <label className="switch">
           <input
@@ -471,7 +517,6 @@ export default function PacketDashboard() {
           {getAll ? "All packets" : "Last 30 packets"}
         </span>
       </div>
-
       <div className="chartsRow">
         <div className="card" style={{ height: 200 }}>
           <Line data={lineData} options={lineOptions} />

@@ -20,8 +20,8 @@ function HistoryAdmin() {
     setLoading(true);
     try {
       const [packetsRes, usersRes] = await Promise.all([
-        axios.get("/api/admin/packets"),
-        axios.get("/api/admin/users"),
+        axios.get("/api/admin/packets"), //ดึงpackets
+        axios.get("/api/admin/users"), // ดึงชื่อusers
       ]);
       setPackets(packetsRes.data);
       setUsers(usersRes.data);
@@ -42,6 +42,7 @@ function HistoryAdmin() {
       alert("กรุณาเลือก User ที่ต้องการเคลียร์ข้อมูล");
       return;
     }
+
     const userToClear = users.find(u => u.user_id === Number(selectedUser));
     if (window.confirm(`Are you sure you want to clear packets for user: ${userToClear?.username}?`)) {
       setLoading(true);
@@ -57,7 +58,8 @@ function HistoryAdmin() {
   };
 
   const handleUserChange = (e) => {
-    setSelectedUser(e.target.value);
+    setSelectedUser(e.target.value); //เซ็ต users
+    console.log(selectedUser)
     setCurrentPage(0);
   };
 
@@ -92,6 +94,7 @@ function HistoryAdmin() {
     RST: "#9c27b0",
     OTHER: "#ccc",
   };
+
   return (
     <div className="page" style={{ padding: "20px" }}>
       <div className="topbar">
