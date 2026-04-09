@@ -1,13 +1,15 @@
 import "../App.css";
-import { useEffect, useState } from "react";
+import "./History.css";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
+
 function History() {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(0);
+  const [selectedPacket, setSelectedPacket] = useState(null);
   const PAGE_SIZE = 12;
-
   useEffect(() => {
     const fetchHistory = async () => {
       try {
@@ -41,6 +43,7 @@ function History() {
         });
         setHistory([]);
         setCurrentPage(0);
+        setSelectedPacket(null);
       } catch (err) {
         console.error("Failed to clear history:", err);
         alert("Failed to clear history.");
@@ -57,6 +60,7 @@ function History() {
 
   const sanitizePayload = (raw, maxLen = 80) => {
     if (!raw) return null;
+    if (typeof raw !== "string") return JSON.stringify(raw).slice(0, maxLen);
     return raw.replace(/[^\x20-\x7E]/g, ".").slice(0, maxLen);
   };
 
@@ -69,31 +73,18 @@ function History() {
   };
 
   return (
-    <div className="History" style={{ padding: "20px" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
+    <div className="history-container">
+      <div className="history-header">
         <h1>Your Packet History</h1>
         <button
+          className="btn-clear"
           onClick={handleClearHistory}
-          style={{
-            padding: "10px 20px",
-            backgroundColor: "#ff4d4f",
-            color: "white",
-            border: "none",
-            borderRadius: "6px",
-            cursor: "pointer",
-            fontWeight: "bold",
-          }}
           disabled={history.length === 0}
         >
           Clear History
         </button>
       </div>
+
       {loading ? (
         <p>Loading history...</p>
       ) : error ? (
@@ -101,134 +92,204 @@ function History() {
       ) : history.length === 0 ? (
         <p>No history found.</p>
       ) : (
-        <table
-          className="history-table"
-          style={{ width: "100%", textAlign: "left", marginTop: "20px" }}
-        >
-          <thead>
-            <tr>
-              <th>Timestamp</th>
-              <th>Source IP</th>
-              <th>Destination IP</th>
-              <th>Protocol</th>
-              <th>FLAG</th>
-              <th>Length</th>
-              <th>Encrypted</th>
-              <th>Payload</th>
-            </tr>
-          </thead>
-          <tbody>
-            {paginatedPackets.map((packet, idx) => (
-              <tr key={packet.id || idx}>
-                <td>{new Date(packet.timestamp).toLocaleString()}</td>
-                <td>{packet.src}</td>
-                <td>{packet.dst}</td>
-                <td>
-                  <span
+        <div className="history-table-wrapper">
+          <table className="history-table">
+            <thead>
+              <tr>
+                <th>Timestamp</th>
+                <th>Source IP</th>
+                <th>Destination IP</th>
+                <th>Protocol</th>
+                <th>Flags</th>
+                <th>Length</th>
+                <th>Encrypted</th>
+                <th>Payload</th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedPackets.map((packet, idx) => (
+                <tr
+                  key={packet.id || idx}
+                  className={selectedPacket === packet ? "selected" : ""}
+                  onClick={() =>
+                    setSelectedPacket(selectedPacket === packet ? null : packet)
+                  }
+                >
+                  <td>{new Date(packet.timestamp).toLocaleString()}</td>
+                  <td>{packet.src}</td>
+                  <td>{packet.dst}</td>
+                  <td>
+                    <span className="protocol-badge">{packet.protocol}</span>
+                  </td>
+                  <td>
+                    {packet.flags ? (
+                      Object.entries(packet.flags)
+                        .filter(([flag, val]) => val)
+                        .map(([flag], idx) => (
+                          <span
+                            key={idx}
+                            style={{
+                              padding: "2px 6px",
+                              borderRadius: 4,
+                              backgroundColor: tcpColors[flag] || "#ccc",
+                              color: "#fff",
+                              fontWeight: "bold",
+                              fontSize: 12,
+                              marginRight: 4,
+                            }}
+                          >
+                            {flag}
+                          </span>
+                        ))
+                    ) : (
+                      <span style={{ color: "#999" }}>—</span>
+                    )}
+                  </td>
+                  <td>{packet.length} B</td>
+                  <td>{packet.encrypted ? "Yes" : "No"}</td>
+                  <td
                     style={{
-                      padding: "2px 8px",
-                      borderRadius: 20,
-                      background: "#e1f5ee",
-                      color: "#0f6e56",
-                      border: "1px solid #9fe1cb",
+                      maxWidth: 200,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                      fontSize: "11px",
+                      fontFamily: "monospace",
+                      color: "#888",
                     }}
+                    title={sanitizePayload(packet.payload, 500) || ""}
                   >
-                    {packet.protocol}
+                    {sanitizePayload(packet.payload) || (
+                      <span style={{ color: "#ccc" }}>—</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+
+          <div className="pagination-container">
+            <button
+              className="btn-pagination"
+              onClick={() => setCurrentPage(0)}
+              disabled={currentPage === 0}
+            >
+              First
+            </button>
+            <button
+              className="btn-pagination"
+              onClick={() => setCurrentPage((p) => Math.max(p - 1, 0))}
+              disabled={currentPage === 0}
+            >
+              Prev
+            </button>
+            <span className="pagination-text">
+              Page {currentPage + 1} of {totalPages || 1}
+            </span>
+            <button
+              className="btn-pagination"
+              onClick={() =>
+                setCurrentPage((p) => Math.min(p + 1, totalPages - 1))
+              }
+              disabled={currentPage >= totalPages - 1}
+            >
+              Next
+            </button>
+            <button
+              className="btn-pagination"
+              onClick={() => setCurrentPage(totalPages - 1)}
+              disabled={currentPage >= totalPages - 1}
+            >
+              Last
+            </button>
+          </div>
+        </div>
+      )}
+
+      {selectedPacket && (
+        <div className="packet-detail-panel">
+          <h3>Packet Details</h3>
+          <table className="packet-detail-table">
+            <tbody>
+              <tr>
+                <td>Time:</td>
+                <td>{new Date(selectedPacket.timestamp).toLocaleString()}</td>
+              </tr>
+              <tr>
+                <td>Source IP:</td>
+                <td>{selectedPacket.src}</td>
+              </tr>
+              <tr>
+                <td>Destination IP:</td>
+                <td>{selectedPacket.dst}</td>
+              </tr>
+              <tr>
+                <td>Protocol:</td>
+                <td>
+                  <span className="protocol-badge">
+                    {selectedPacket.protocol}
                   </span>
                 </td>
-                <td>
-                  {packet.flags ? (
-                    Object.entries(packet.flags)
-                      .filter(([flag, val]) => val)
-                      .map(([flag], idx) => (
-                        <span
-                          key={idx}
-                          style={{
-                            padding: "2px 6px",
-                            borderRadius: 4,
-                            backgroundColor: tcpColors[flag] || "#ccc",
-                            color: "#fff",
-                            fontWeight: "bold",
-                            fontSize: 12,
-                            marginRight: 4,
-                          }}
-                        >
-                          {flag}
-                        </span>
-                      ))
-                  ) : (
-                    <span style={{ color: "#999" }}>—</span>
-                  )}
-                </td>
-                <td>{packet.length}</td>
-                <td>{packet.encrypted ? "Yes" : "No"}</td>
-                <td
-                  style={{
-                    maxWidth: 200,
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                    fontSize: "11px",
-                    fontFamily: "monospace",
-                    color: "#888",
-                  }}
-                  title={sanitizePayload(packet.payload, 500) || ""}
-                >
-                  {sanitizePayload(packet.payload) || (
-                    <span style={{ color: "#ccc" }}>—</span>
-                  )}
-                </td>
               </tr>
-            ))}
-          </tbody>
-        </table>
+              <tr>
+                <td>Length:</td>
+                <td>{selectedPacket.length} B</td>
+              </tr>
+              <tr>
+                <td>Encrypted:</td>
+                <td>{selectedPacket.encrypted ? "Yes" : "No"}</td>
+              </tr>
+              {selectedPacket.srcPort && (
+                <tr>
+                  <td>Source Port:</td>
+                  <td>{selectedPacket.srcPort}</td>
+                </tr>
+              )}
+              {selectedPacket.dstPort && (
+                <tr>
+                  <td>Destination Port:</td>
+                  <td>{selectedPacket.dstPort}</td>
+                </tr>
+              )}
+              {selectedPacket.flags && (
+                <tr>
+                  <td>TCP Flags:</td>
+                  <td>
+                    {typeof selectedPacket.flags === "object"
+                      ? JSON.stringify(selectedPacket.flags)
+                      : selectedPacket.flags}
+                  </td>
+                </tr>
+              )}
+              {selectedPacket.payload && (
+                <tr>
+                  <td>Payload:</td>
+                  <td>
+                    <pre className="payload-pre">
+                      {typeof selectedPacket.payload === "string"
+                        ? selectedPacket.payload
+                            .replace(/[^\x20-\x7E\n\r\t]/g, ".")
+                            .slice(0, 1000)
+                        : JSON.stringify(selectedPacket.payload)}
+                    </pre>
+                    <div className="payload-meta">
+                      <span>
+                        printable ASCII · non-printable &rarr; <code>.</code>
+                      </span>
+                      {typeof selectedPacket.payload === "string" && (
+                        <span>
+                          <strong>{selectedPacket.payload.length}</strong> chars
+                          shown
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
       )}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          gap: "16px",
-          marginTop: "24px",
-        }}
-      >
-        <button
-          onClick={() => setCurrentPage((p) => Math.max(p - 1, 0))}
-          disabled={currentPage === 0}
-          style={{
-            padding: "8px 16px",
-            border: "none",
-            borderRadius: "4px",
-            backgroundColor: currentPage === 0 ? "#f0f0f0" : "#1890ff",
-            color: currentPage === 0 ? "#a0a0a0" : "white",
-            cursor: currentPage === 0 ? "not-allowed" : "pointer",
-            fontWeight: "bold",
-            boxShadow: "0 2px 0 rgba(0,0,0,0.015)",
-          }}
-        >
-          Prev
-        </button>
-        <span style={{ fontSize: "14px", fontWeight: "500", color: "#333" }}>
-          Page {currentPage + 1} of {totalPages || 1}
-        </span>
-        <button
-          onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages - 1))}
-          disabled={currentPage >= totalPages - 1}
-          style={{
-            padding: "8px 16px",
-            border: "none",
-            borderRadius: "4px",
-            backgroundColor:
-              currentPage >= totalPages - 1 ? "#f0f0f0" : "#1890ff",
-            color: currentPage >= totalPages - 1 ? "#a0a0a0" : "white",
-            cursor: currentPage >= totalPages - 1 ? "not-allowed" : "pointer",
-            fontWeight: "bold",
-            boxShadow: "0 2px 0 rgba(0,0,0,0.015)",
-          }}
-        >
-          Next
-        </button>
-      </div>
     </div>
   );
 }
