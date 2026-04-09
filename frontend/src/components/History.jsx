@@ -1,4 +1,6 @@
 import "../App.css";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 
 function History() {
   const [history, setHistory] = useState([]);
@@ -157,6 +159,7 @@ const paginatedPackets = history
               Next
             </button>
           </div>
+          
     </div>
   );
 }
