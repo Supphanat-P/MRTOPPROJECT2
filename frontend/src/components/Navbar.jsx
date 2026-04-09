@@ -108,7 +108,7 @@ function NavBar({ currUser, token, setToken }) {
           </>
         ) : (
           <>
-            <span style={{ marginRight: 10 }}></span>
+            <span style={{ marginRight: 10 }}>{currUser?.username}</span>
             <button className="navbar__logout" onClick={handleLogout}>
               <LogoutIcon />
               Logout
