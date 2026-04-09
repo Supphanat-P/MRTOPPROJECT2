@@ -94,7 +94,20 @@ function NavBar({ currUser, token, setToken }) {
             </Link>
           </li>
         )}
+        {isLogin && (
+          <li>
+            <Link
+              to={currUser?.role === "admin" ? "/Encryptionadmin" : "/Encryption"}
+              className={
+                location.pathname.startsWith("/Encryption") ? "active" : ""
+              }
+            >
+              Encryption
+            </Link>
+          </li>
+        )}
       </ul>
+
 
       <div className="navbar__right">
         {!isLogin ? (
