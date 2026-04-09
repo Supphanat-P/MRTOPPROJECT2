@@ -41,6 +41,7 @@ export default function PacketDashboard() {
   const [getAll, setGetAll] = useState(false);
   const PAGE_SIZE = 12;
   const [alertMsg, setAlertMsg] = useState(null);
+  const [isCapturing, setIsCapturing] = useState(false);
 
   useEffect(() => {
     const init = async () => {
@@ -55,11 +56,11 @@ export default function PacketDashboard() {
       fetch("/api/devices")
         .then((r) => r.json())
         .then(setDevices)
-        .catch(() => { });
+        .catch(() => {});
 
       // รับ packet
       socketRef.current.on("packetBatch", (batch) =>
-        setPackets((p) => [...p, ...batch])
+        setPackets((p) => [...p, ...batch]),
       );
 
       // รับ ip list
@@ -104,16 +105,23 @@ export default function PacketDashboard() {
   const handleDeviceChange = (e) => {
     const val = e.target.value;
     setSelectedDevice(val);
-    if (val) startCapture(val);
+    setPackets([]);
+    setDisplayPackets([]);
+    setFilterIP("");
+    setIsCapturing(false);
   };
 
-  const togglePause = () => {
-    if (isPaused) {
-      socketRef.current.emit("resumeCapture");
-      setIsPaused(false);
-    } else {
+  const toggleCapture = () => {
+    if (!selectedDevice) return alert("Please select a device first!");
+
+    if (isCapturing) {
       socketRef.current.emit("pauseCapture");
+      setIsCapturing(false);
       setIsPaused(true);
+    } else {
+      socketRef.current.emit("startCapture", { deviceName: selectedDevice });
+      setIsCapturing(true);
+      setIsPaused(false);
     }
   };
 
@@ -156,7 +164,7 @@ export default function PacketDashboard() {
         borderColor: "#1d9e75",
         backgroundColor: "rgba(29,158,117,0.08)",
         fill: true,
-        tension: 0.4,
+        tension: 0.2,
         pointRadius: 0,
       },
       {
@@ -165,11 +173,12 @@ export default function PacketDashboard() {
         borderColor: "#d85a30",
         backgroundColor: "rgba(216,90,48,0.08)",
         fill: true,
-        tension: 0.4,
+        tension: 0.2,
         pointRadius: 0,
       },
     ],
   };
+
   const lineOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -207,11 +216,41 @@ export default function PacketDashboard() {
   const countLineData = {
     labels: last30.map((p) => new Date(p.timestamp).toLocaleTimeString()),
     datasets: [
-      { label: "TCP", data: summedCounts.map((c) => c.TCP), borderColor: "#50e3c2", fill: false, tension: 0.3 },
-      { label: "UDP", data: summedCounts.map((c) => c.UDP), borderColor: "#bd10e0", fill: false, tension: 0.3 },
-      { label: "HTTPS", data: summedCounts.map((c) => c.HTTPS), borderColor: "#d85a30", fill: false, tension: 0.3 },
-      { label: "Encrypted", data: summedCounts.map((c) => c.Encrypted), borderColor: "#ff9900", fill: false, tension: 0.3 },
-      { label: "Plaintext", data: summedCounts.map((c) => c.Plaintext), borderColor: "#1d9e75", fill: false, tension: 0.3 },
+      {
+        label: "TCP",
+        data: summedCounts.map((c) => c.TCP),
+        borderColor: "#50e3c2",
+        fill: false,
+        tension: 0.3,
+      },
+      {
+        label: "UDP",
+        data: summedCounts.map((c) => c.UDP),
+        borderColor: "#bd10e0",
+        fill: false,
+        tension: 0.3,
+      },
+      {
+        label: "HTTPS",
+        data: summedCounts.map((c) => c.HTTPS),
+        borderColor: "#ff9900",
+        fill: false,
+        tension: 0.3,
+      },
+      {
+        label: "Encrypted",
+        data: summedCounts.map((c) => c.Encrypted),
+        borderColor: "#d85a30",
+        fill: false,
+        tension: 0.3,
+      },
+      {
+        label: "Plaintext",
+        data: summedCounts.map((c) => c.Plaintext),
+        borderColor: "#1d9e75",
+        fill: false,
+        tension: 0.3,
+      },
     ],
   };
 
@@ -236,7 +275,7 @@ export default function PacketDashboard() {
 
   const protocolColors = {
     HTTP: "#1d9e75",
-    HTTPS: "#d85a30",
+    HTTPS: "#ff9900",
     SSH: "#4a90e2",
     DNS: "#f5a623",
     TCP: "#50e3c2",
@@ -285,17 +324,19 @@ export default function PacketDashboard() {
   return (
     <div className="page">
       {alertMsg && (
-        <div style={{
-          position: "fixed",
-          top: 20,
-          right: 20,
-          background: "#ff4d4f",
-          color: "#fff",
-          padding: "12px 16px",
-          borderRadius: "8px",
-          zIndex: 9999,
-          boxShadow: "0 4px 12px rgba(0,0,0,0.2)"
-        }}>
+        <div
+          style={{
+            position: "fixed",
+            top: 20,
+            right: 20,
+            background: "#ff4d4f",
+            color: "#fff",
+            padding: "12px 16px",
+            borderRadius: "8px",
+            zIndex: 9999,
+            boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+          }}
+        >
           ⚠️ {alertMsg}
         </div>
       )}
@@ -352,8 +393,8 @@ export default function PacketDashboard() {
         <button className="btnClear" onClick={() => setFilterIP("")}>
           Show all
         </button>
-        <button className="btnClear" onClick={togglePause}>
-          {isPaused ? "Resume" : "Pause"}
+        <button className="btnClear" onClick={toggleCapture}>
+          {isCapturing ? "Stop Capture" : "Start Capture"}
         </button>
       </div>
 
@@ -457,9 +498,14 @@ export default function PacketDashboard() {
                         style={{
                           padding: "2px 8px",
                           borderRadius: 20,
-                          background: "#e1f5ee",
-                          color: "#0f6e56",
-                          border: "1px solid #9fe1cb",
+                          background:
+                            (protocolColors[p.protocol] || "#ccc") + "33",
+                          color: protocolColors[p.protocol] || "#000",
+                          border:
+                            "1px solid " +
+                            (protocolColors[p.protocol] || "#ccc"),
+                          fontWeight: "600",
+                          fontSize: "12px",
                         }}
                       >
                         {p.protocol}

@@ -19,11 +19,10 @@ function App() {
 
   const socketRef = useRef(null);
 
-  //  สร้าง socket แค่ครั้งเดียว
   useEffect(() => {
     if (!token) return;
 
-    socketRef.current = io("http://localhost:3000", {
+    socketRef.current = io("/", {
       auth: { token },
     });
 

@@ -84,8 +84,8 @@ io.on("connection", (socket) => {
     c.on("packet", () => {
       packetCount++;
       totalPackets++;
+      if (paused) return;
 
-      //  แจ้งเตือนทุก 1000 packet
       if (totalPackets % 1000 === 0) {
         console.log("⚠️ Packet ครบ:", totalPackets);
 
@@ -169,7 +169,7 @@ io.on("connection", (socket) => {
 
       packetBuffer = [];
     }
-  }, 100);
+  }, 0.5);
 
   const monitor = setInterval(() => {
     const now = Date.now();
@@ -177,8 +177,6 @@ io.on("connection", (socket) => {
     const rate = packetCount / seconds;
 
     if (rate > MAX_PACKET_PER_SEC) {
-      console.log("⚠️ Packet เยอะเกิน:", rate.toFixed(0));
-
       socket.emit("securityAlert", {
         message: "Packet ถูกส่งมามากเกินไป",
         rate: rate.toFixed(0),
@@ -187,7 +185,7 @@ io.on("connection", (socket) => {
 
     packetCount = 0;
     lastCheck = now;
-  }, 1000);
+  }, 100);
 
   socket.on("disconnect", () => {
     console.log("Disconnected:", socket.id);
@@ -199,5 +197,5 @@ io.on("connection", (socket) => {
 
 const PORT = 3000;
 server.listen(PORT, () =>
-  console.log(`Backend running on http://localhost:${PORT}`)
+  console.log(`Backend running on http://localhost:${PORT}`),
 );

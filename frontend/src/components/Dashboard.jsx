@@ -143,7 +143,7 @@ function Dashboard() {
 
     try {
       await axios.put(
-        `http://localhost:3000/users/update-role/${id}`,
+        `/api/users/update-role/${id}`,
         { role_id: newRoleId },
         {
           headers: { Authorization: `Bearer ${token}` },

@@ -19,7 +19,7 @@ function HistoryAdmin() {
       try {
         const [packetsRes, usersRes] = await Promise.all([
           axios.get("/api/admin/packets"),
-          axios.get("/api/admin/users")
+          axios.get("/api/admin/users"),
         ]);
         setPackets(packetsRes.data);
         setUsers(usersRes.data);
@@ -44,11 +44,26 @@ function HistoryAdmin() {
   const totalPages = Math.ceil(filteredPackets.length / PAGE_SIZE);
   const paginatedPackets = filteredPackets.slice(
     currentPage * PAGE_SIZE,
-    (currentPage + 1) * PAGE_SIZE
+    (currentPage + 1) * PAGE_SIZE,
   );
+  const sanitizePayload = (raw, maxLen = 80) => {
+    if (!raw) return null;
+    return raw.replace(/[^\x20-\x7E]/g, ".").slice(0, maxLen);
+  };
+
+  const protocolColors = {
+    HTTP: "#1d9e75",
+    HTTPS: "#ff9900",
+    SSH: "#4a90e2",
+    DNS: "#f5a623",
+    TCP: "#50e3c2",
+    UDP: "#bd10e0",
+    ICMP: "#f8e71c",
+    OTHER: "#9b9b9b",
+  };
 
   return (
-    <div className="page" style={{ padding: '20px' }}>
+    <div className="page" style={{ padding: "20px" }}>
       <div className="topbar">
         <div className="logo">
           <span className="dot" /> History Admin Panel
@@ -71,7 +86,14 @@ function HistoryAdmin() {
             ))}
           </select>
         </div>
-        <div className="metricCard" style={{ marginLeft: 'auto', padding: '10px 20px', minWidth: '150px' }}>
+        <div
+          className="metricCard"
+          style={{
+            marginLeft: "auto",
+            padding: "10px 20px",
+            minWidth: "150px",
+          }}
+        >
           <div className="metricLabel">Total Packets</div>
           <div className="metricValue">{filteredPackets.length}</div>
         </div>
@@ -82,7 +104,9 @@ function HistoryAdmin() {
           <span>Packets History</span>
         </div>
         {loading ? (
-          <p style={{ padding: '20px', textAlign: 'center' }}>Loading packets...</p>
+          <p style={{ padding: "20px", textAlign: "center" }}>
+            Loading packets...
+          </p>
         ) : (
           <div style={{ overflowX: "auto" }}>
             <table width="100%">
@@ -95,6 +119,7 @@ function HistoryAdmin() {
                   <th>Protocol</th>
                   <th>Length</th>
                   <th>Encrypted</th>
+                  <th>Payload</th>
                 </tr>
               </thead>
               <tbody>
@@ -116,9 +141,14 @@ function HistoryAdmin() {
                           style={{
                             padding: "2px 8px",
                             borderRadius: 20,
-                            background: "#e1f5ee",
-                            color: "#0f6e56",
-                            border: "1px solid #9fe1cb",
+                            background:
+                              (protocolColors[p.protocol] || "#ccc") + "33",
+                            color: protocolColors[p.protocol] || "#000",
+                            border:
+                              "1px solid " +
+                              (protocolColors[p.protocol] || "#ccc"),
+                            fontWeight: "600",
+                            fontSize: "12px",
                           }}
                         >
                           {p.protocol}
@@ -127,6 +157,22 @@ function HistoryAdmin() {
                       <td>{p.length} B</td>
                       <td className={p.encrypted ? "enc-yes" : "enc-no"}>
                         {p.encrypted ? "Yes" : "No"}
+                      </td>
+                      <td
+                        style={{
+                          maxWidth: 200,
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                          fontSize: "11px",
+                          fontFamily: "monospace",
+                          color: "#888",
+                        }}
+                        title={sanitizePayload(p.payload, 500) || ""}
+                      >
+                        {sanitizePayload(p.payload) || (
+                          <span style={{ color: "#ccc" }}>—</span>
+                        )}
                       </td>
                     </tr>
                   ))
@@ -142,7 +188,8 @@ function HistoryAdmin() {
                 Prev
               </button>
               <span>
-                Page {filteredPackets.length > 0 ? currentPage + 1 : 0} of {totalPages || 1}
+                Page {filteredPackets.length > 0 ? currentPage + 1 : 0} of{" "}
+                {totalPages || 1}
               </span>
               <button
                 onClick={() =>
