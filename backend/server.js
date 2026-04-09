@@ -20,7 +20,7 @@ app.use(express.urlencoded({ limit: "10mb", extended: true }));
 app.use("/api/packets", packetsRouter);
 app.use("/api/users", usersRouter);
 app.use("/api/admin", adminRoleRouter); // Jo: เพิ่ม Route Prefix /admin สำหรับจัดการข้อมูลส่วนของ Admin
-app.use("/user-role", userRoleRouter);
+app.use("/api/user-role", userRoleRouter);
 
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });

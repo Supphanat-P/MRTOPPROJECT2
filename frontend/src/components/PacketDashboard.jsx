@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import io from "socket.io-client";
-import { Line, Doughnut } from "react-chartjs-2";
+import { Line, Doughnut, Bar } from "react-chartjs-2";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -12,6 +12,7 @@ import {
   Tooltip,
   Legend,
   Filler,
+  BarElement,
 } from "chart.js";
 import "./PacketDashboard.css";
 
@@ -21,6 +22,7 @@ ChartJS.register(
   PointElement,
   LineElement,
   ArcElement,
+  BarElement,
   Title,
   Tooltip,
   Legend,
@@ -320,6 +322,37 @@ export default function PacketDashboard() {
       },
     ],
   };
+  const barProtocolData = {
+    labels: Object.keys(protocolCounts),
+    datasets: [
+      {
+        label: "Packet Count",
+        data: Object.values(protocolCounts),
+        backgroundColor: Object.keys(protocolCounts).map(
+          (p) => protocolColors[p] || "#ccc",
+        ),
+      },
+    ],
+  };
+
+  const barProtocolOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false }, // ไม่ต้องโชว์ legend ถ้า color bar ชัดเจน
+      tooltip: { mode: "index", intersect: false },
+    },
+    scales: {
+      x: {
+        ticks: { color: "#a09f99" },
+        grid: { display: false },
+      },
+      y: {
+        ticks: { color: "#a09f99" },
+        beginAtZero: true,
+      },
+    },
+  };
 
   return (
     <div className="page">
@@ -444,7 +477,7 @@ export default function PacketDashboard() {
         </div>
 
         <div className="card" style={{ height: 200 }}>
-          <Line data={countLineData} options={countLineOptions} />
+          <Bar data={barProtocolData} options={barProtocolOptions} />
         </div>
 
         <div className="card" style={{ height: 200 }}>
@@ -537,7 +570,15 @@ export default function PacketDashboard() {
             </tbody>
           </table>
 
-         <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: "16px", marginTop: "24px" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              gap: "16px",
+              marginTop: "24px",
+            }}
+          >
             <button
               onClick={() => setCurrentPage((p) => Math.max(p - 1, 0))}
               disabled={currentPage === 0}
@@ -549,26 +590,32 @@ export default function PacketDashboard() {
                 color: currentPage === 0 ? "#a0a0a0" : "white",
                 cursor: currentPage === 0 ? "not-allowed" : "pointer",
                 fontWeight: "bold",
-                boxShadow: "0 2px 0 rgba(0,0,0,0.015)"
+                boxShadow: "0 2px 0 rgba(0,0,0,0.015)",
               }}
             >
               Prev
             </button>
-            <span style={{ fontSize: "14px", fontWeight: "500", color: "#333" }}>Page {currentPage + 1} of {totalPages || 1}</span>
+            <span
+              style={{ fontSize: "14px", fontWeight: "500", color: "#333" }}
+            >
+              Page {currentPage + 1} of {totalPages || 1}
+            </span>
             <button
               onClick={() =>
                 setCurrentPage((p) => Math.min(p + 1, totalPages - 1))
               }
               disabled={currentPage >= totalPages - 1}
-               style={{
+              style={{
                 padding: "8px 16px",
                 border: "none",
                 borderRadius: "4px",
-                backgroundColor: currentPage >= totalPages - 1 ? "#f0f0f0" : "#1890ff",
+                backgroundColor:
+                  currentPage >= totalPages - 1 ? "#f0f0f0" : "#1890ff",
                 color: currentPage >= totalPages - 1 ? "#a0a0a0" : "white",
-                cursor: currentPage >= totalPages - 1 ? "not-allowed" : "pointer",
+                cursor:
+                  currentPage >= totalPages - 1 ? "not-allowed" : "pointer",
                 fontWeight: "bold",
-                boxShadow: "0 2px 0 rgba(0,0,0,0.015)"
+                boxShadow: "0 2px 0 rgba(0,0,0,0.015)",
               }}
             >
               Next

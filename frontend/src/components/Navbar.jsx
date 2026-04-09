@@ -6,7 +6,6 @@ import { useEffect } from "react";
 
 const NAV_LINKS = [
   { to: "/home", label: "Home" },
-  { to: "/dashboard", label: "Users Managements" },
   { to: "/pdashboard", label: "Packets" },
 ];
 
@@ -76,11 +75,25 @@ function NavBar({ currUser, setToken }) {
         {isLogin && (
           <li>
             {/* Jo: เพิ่มเงื่อนไขตรวจสอบ role ถ้าเป็น admin ให้ลิงก์ไปที่ /historyadmin ถ้าเป็น user ปกติให้ไปที่ /history */}
-            <Link 
-              to={currUser?.role === 'admin' ? '/historyadmin' : '/history'} 
-              className={location.pathname.startsWith('/history') ? "active" : ""}
+            <Link
+              to={currUser?.role === "admin" ? "/historyadmin" : "/history"}
+              className={
+                location.pathname.startsWith("/history") ? "active" : ""
+              }
             >
               History
+            </Link>
+          </li>
+        )}
+        {isLogin && (
+          <li>
+            <Link
+              to={currUser?.role === "admin" ? "/dashboard" : ""}
+              className={
+                location.pathname.startsWith("/dashboard") ? "active" : ""
+              }
+            >
+              Dashboard
             </Link>
           </li>
         )}

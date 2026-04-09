@@ -71,11 +71,7 @@ function App() {
       <NavBar currUser={currUser} token={token} setToken={setToken} />
 
       {/* alert โผล่ทุกหน้า */}
-      {alertMsg && (
-        <div className="alert-box">
-          ⚠️ {alertMsg}
-        </div>
-      )}
+      {alertMsg && <div className="alert-box">⚠️ {alertMsg}</div>}
 
       <Routes>
         <Route path="/home" element={<Home />} />
@@ -84,7 +80,8 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/pdashboard" element={<PacketDashboard />} />
         <Route path="/history" element={<History />} />
-        <Route path="/historyadmin" element={<HistoryAdmin />} /> {/* Jo: เพิ่ม Route สำหรับหน้า HistoryAdmin */}
+        <Route path="/historyadmin" element={<HistoryAdmin />} />{" "}
+        {/* Jo: เพิ่ม Route สำหรับหน้า HistoryAdmin */}
         {/* ส่ง socket ลงไป */}
         <Route
           path="/pdashboard"
