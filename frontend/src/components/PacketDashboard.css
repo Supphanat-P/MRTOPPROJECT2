@@ -333,6 +333,7 @@ input:checked + .slider:before {
   background: #fafafa;
   border-radius: 8px;
   border: 1px solid #eee;
+  width: fit-content;
 }
 
 .legendGroup {

@@ -131,6 +131,7 @@ io.on("connection", (socket) => {
           if (flags & 0x04) tcpType.push("RST");
           if (tcpType.length === 0) tcpType.push("OTHER");
           tcpType = tcpType.join("-");
+          
           if (srcPort === 443 || dstPort === 443) {
             protocol = "HTTPS";
             encrypted = true;

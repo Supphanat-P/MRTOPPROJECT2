@@ -52,8 +52,6 @@ function History() {
   };
 
   const paginatedPackets = history
-    .slice()
-    .reverse()
     .slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE);
 
   const totalPages = Math.ceil(history.length / PAGE_SIZE);
@@ -137,7 +135,8 @@ function History() {
                           (protocolColors[packet.protocol] || "#ccc") + "33",
                         color: protocolColors[packet.protocol] || "#000",
                         border:
-                          "1px solid " + (protocolColors[packet.protocol] || "#ccc"),
+                          "1px solid " +
+                          (protocolColors[packet.protocol] || "#ccc"),
                         fontWeight: "600",
                         fontSize: "12px",
                       }}

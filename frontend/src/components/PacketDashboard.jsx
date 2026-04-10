@@ -217,61 +217,6 @@ export default function PacketDashboard() {
       .reduce((a, b) => a + b.Plaintext, 0),
   }));
 
-  const countLineData = {
-    labels: last30.map((p) => new Date(p.timestamp).toLocaleTimeString()),
-    datasets: [
-      {
-        label: "TCP",
-        data: summedCounts.map((c) => c.TCP),
-        borderColor: "#50e3c2",
-        fill: false,
-        tension: 0.3,
-      },
-      {
-        label: "UDP",
-        data: summedCounts.map((c) => c.UDP),
-        borderColor: "#bd10e0",
-        fill: false,
-        tension: 0.3,
-      },
-      {
-        label: "HTTPS",
-        data: summedCounts.map((c) => c.HTTPS),
-        borderColor: "#ff9900",
-        fill: false,
-        tension: 0.3,
-      },
-      {
-        label: "Encrypted",
-        data: summedCounts.map((c) => c.Encrypted),
-        borderColor: "#d85a30",
-        fill: false,
-        tension: 0.3,
-      },
-      {
-        label: "Plaintext",
-        data: summedCounts.map((c) => c.Plaintext),
-        borderColor: "#1d9e75",
-        fill: false,
-        tension: 0.3,
-      },
-    ],
-  };
-
-  const countLineOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    animation: false,
-    plugins: {
-      legend: { display: true, position: "bottom" },
-      tooltip: { mode: "index", intersect: false },
-    },
-    scales: {
-      x: { ticks: { color: "#a09f99" } },
-      y: { ticks: { color: "#a09f99" } },
-    },
-  };
-
   const protocolCounts = filtered.reduce((acc, p) => {
     acc[p.protocol] = (acc[p.protocol] || 0) + 1;
     return acc;
@@ -309,13 +254,13 @@ export default function PacketDashboard() {
 
   const doughnutProtocolOptions = {
     responsive: true,
-    maintainAspectRatio: true,
+    maintainAspectRatio: false,
     cutout: "50%",
     plugins: { legend: { display: true, position: "right" } },
   };
   const doughnutEncryptedOptions = {
     responsive: true,
-    maintainAspectRatio: true,
+    maintainAspectRatio: false,
     cutout: "50%",
     plugins: { legend: { display: true, position: "right" } },
   };

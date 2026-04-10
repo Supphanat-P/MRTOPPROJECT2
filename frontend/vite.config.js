@@ -9,11 +9,16 @@ export default defineConfig({
     allowedHosts: [
       "endosporously-submolecular-shin.ngrok-free.dev",
       "localhost",
-      "all"
+      "all",
     ],
     proxy: {
       "/api": { target: "http://localhost:3000", changeOrigin: true },
-      "/socket.io": { target: "http://localhost:3000", ws: true },
+      "/socket.io": {
+        target: "http://localhost:3000",
+        ws: true,
+        changeOrigin: true,
+        secure: false,
+      },
     },
   },
 });
